@@ -1,0 +1,20 @@
+# Tiny offline smoke config (no downloads) — verifies the full loop quickly
+dataset: synthetic
+model: small_cnn
+seed: 0
+device: cpu
+num_clients: 8
+clients_per_round: 8
+rounds: 3
+local_epochs: 1
+lr: 0.05
+batch_size: 64
+alpha: 0.5
+attack: lie
+num_malicious: 2
+target_label: 0
+defense: ecf
+defense_kw: {tau: 0.5, mode: soft, consensus: geomedian, norm_gate: true}
+attribution: grad_x_input
+probe_size: 32
+root_size: 64

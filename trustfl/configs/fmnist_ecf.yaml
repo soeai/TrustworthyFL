@@ -1,0 +1,32 @@
+# Fashion-MNIST, ECF defense vs backdoor — single-GPU reference config
+dataset: fmnist          # synthetic | fmnist | cifar10 | tabular
+model: small_cnn         # small_cnn | resnet9 | mlp
+root: ./data
+seed: 0
+device: cuda             # cuda | cpu
+
+num_clients: 20
+clients_per_round: 20    # full participation (cross-silo)
+rounds: 60
+local_epochs: 1
+lr: 0.01
+batch_size: 64
+alpha: 0.5               # Dirichlet non-IID (0.1 = more skewed)
+
+attack: backdoor         # label_flip | backdoor | sign_flip | gaussian | lie | min_max
+num_malicious: 4
+target_label: 0
+trigger_size: 3
+
+defense: ecf             # fedavg | trimmed_mean | median | multi_krum | fltrust | ecf
+defense_kw:
+  tau: 0.5
+  mode: soft             # soft | hard
+  consensus: geomedian   # geomedian | coordmedian | mean
+  norm_gate: true
+
+# ECF attribution
+attribution: grad_x_input   # grad_x_input | integrated_gradients
+ig_steps: 16
+probe_size: 64
+root_size: 100

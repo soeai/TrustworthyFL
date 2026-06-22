@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "trustfl"
+version = "0.1.0"
+description = "Explanation-Consistency Filtering for Byzantine-robust Federated Learning"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24", "scipy>=1.10", "scikit-learn>=1.3", "pyyaml>=6.0",
+  "torch>=2.1", "torchvision>=0.16", "flwr[simulation]>=1.7,<2.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["trustfl"]
+
+# Flower app entry points (for `flwr run` on newer Flower versions)
+[tool.flwr.app]
+publisher = "trustfl"
+
+[tool.flwr.app.components]
+serverapp = "trustfl.flower.server_app:app"
+clientapp = "trustfl.flower.client_app:app"
+
+[tool.flwr.app.config]
+num-server-rounds = 60
+
+[tool.flwr.federations]
+default = "local-simulation"
+
+[tool.flwr.federations.local-simulation]
+options.num-supernodes = 20
