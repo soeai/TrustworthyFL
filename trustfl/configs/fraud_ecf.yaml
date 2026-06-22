@@ -1,0 +1,39 @@
+# Tabular fraud, ECF defense — single-GPU reference config.
+# Offline synthetic fraud generator unless data/fraud.npz is present.
+dataset: fraud           # synthetic | fmnist | cifar10 | fraud | imdb
+data_mode: syn           # syn | real  (real auto-downloads OpenML credit-card fraud if absent)
+model: mlp               # small_cnn | resnet9 | mlp | text_mlp
+root: ./data
+seed: 0
+device: cuda             # cuda | cpu
+
+num_clients: 20
+clients_per_round: 20    # cross-silo (e.g. banks)
+rounds: 40
+local_epochs: 1
+lr: 0.01
+batch_size: 64
+alpha: 0.5               # Dirichlet non-IID
+
+attack: spurious_feature # label_flip | backdoor | spurious_feature | constrained_backdoor | adaptive_ecf | sign_flip | gaussian | lie | min_max
+num_malicious: 4
+target_label: 1          # fraud
+
+# tabular trigger / spurious feature (col 0 = branch_code; cf. branch_code=X)
+trigger_feature: 0
+trigger_value: 99.0
+spurious_feature: 0
+spurious_value: 7.0
+
+defense: ecf             # fedavg | trimmed_mean | median | multi_krum | fltrust | ecf
+defense_kw:
+  tau: 0.5
+  mode: soft
+  consensus: geomedian
+  norm_gate: true
+
+# ECF attribution
+attribution: grad_x_input   # grad_x_input | integrated_gradients | gradient_shap
+ig_steps: 16
+probe_size: 64
+root_size: 500

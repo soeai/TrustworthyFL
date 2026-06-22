@@ -22,7 +22,10 @@ from ..models.build import build_model
 from ..clients.trainer import local_train, evaluate, backdoor_success_rate
 from ..attribution.operators import (set_params, get_params, make_attribution_fn,
                                      server_reference_update)
-from ..attacks.data_attacks import label_flip, poison_spurious_feature
+from ..attacks.data_attacks import (label_flip, poison_spurious_feature,
+                                    tabular_trigger, poison_tabular_backdoor,
+                                    poison_tabular_spurious, text_trigger,
+                                    poison_text_backdoor, poison_text_spurious)
 from ..attacks import update_attacks as ua
 from ..defenses.base import ClientUpdate, AggContext
 from ..defenses.factory import build_defense
@@ -47,10 +50,13 @@ def run(cfg: dict):
     torch.manual_seed(cfg["seed"]); np.random.seed(cfg["seed"])
     dev = cfg["device"] if torch.cuda.is_available() or cfg["device"] == "cpu" else "cpu"
 
-    Xtr, ytr, Xte, yte, meta = load_dataset(cfg["dataset"], cfg.get("root", "./data"))
+    Xtr, ytr, Xte, yte, meta = load_dataset(cfg["dataset"], cfg.get("root", "./data"),
+                                            data_mode=cfg.get("data_mode", "auto"))
     mkw = {"num_classes": meta.num_classes, "in_ch": meta.in_ch}
-    if not meta.image:
+    if meta.modality == "tabular":
         mkw["in_dim"] = meta.in_dim
+    elif meta.modality == "text":
+        mkw["vocab_size"] = meta.vocab_size
     model = build_model(cfg["model"], **mkw)
 
     parts = dirichlet_partition(ytr.numpy(), cfg["num_clients"], cfg["alpha"], seed=cfg["seed"])
@@ -66,13 +72,21 @@ def run(cfg: dict):
     test_loader = _loader(Xte, yte, 256, shuffle=False)
     # backdoor test set: triggered, non-target inputs
     tgt = cfg.get("target_label", 0)
+    tfeat, tval = cfg.get("trigger_feature", 0), cfg.get("trigger_value", 99.0)
+    ttok, tpos = cfg.get("trigger_token", 2), cfg.get("trigger_pos", 0)
     keep = (yte != tgt)
-    bd_loader = _loader(add_pixel_trigger(Xte[keep]), yte[keep], 256, shuffle=False)
+    if meta.image:
+        bd_x = add_pixel_trigger(Xte[keep])
+    elif meta.modality == "tabular":
+        bd_x = tabular_trigger(Xte[keep], feat_idx=tfeat, value=tval)
+    else:  # text
+        bd_x = text_trigger(Xte[keep], token_id=ttok, pos=tpos)
+    bd_loader = _loader(bd_x, yte[keep], 256, shuffle=False)
 
     defense = build_defense(cfg["defense"], num_malicious=cfg["num_malicious"], **cfg.get("defense_kw", {}))
     global_params: NDArrays = get_params(model)
 
-    print(f"device={dev} dataset={meta.name} clients={cfg['num_clients']} "
+    print(f"device={dev} dataset={meta.name}({meta.source}) clients={cfg['num_clients']} "
           f"malicious={len(malicious)} defense={defense.name} attack={cfg['attack']}")
 
     for rnd in range(1, cfg["rounds"] + 1):
@@ -91,12 +105,28 @@ def run(cfg: dict):
                 if cfg["attack"] == "label_flip":
                     yc = label_flip(yc, meta.num_classes, seed=cfg["seed"] + cid)
                 elif cfg["attack"] == "spurious_feature":
-                    Xc, yc = poison_spurious_feature(Xc, yc, tgt,
-                                                     size=cfg.get("spurious_size", 4),
-                                                     value=cfg.get("spurious_value", 0.25))
+                    if meta.image:
+                        Xc, yc = poison_spurious_feature(Xc, yc, tgt,
+                                                         size=cfg.get("spurious_size", 4),
+                                                         value=cfg.get("spurious_value", 0.25))
+                    elif meta.modality == "tabular":
+                        Xc, yc = poison_tabular_spurious(Xc, yc, tgt,
+                                                         feat_idx=cfg.get("spurious_feature", 0),
+                                                         value=cfg.get("spurious_value", 7.0))
+                    else:  # text
+                        Xc, yc = poison_text_spurious(Xc, yc, tgt,
+                                                      token_id=cfg.get("spurious_token", 3),
+                                                      pos=cfg.get("spurious_pos", 1))
                 else:  # backdoor, constrained_backdoor, adaptive_ecf
-                    Xc, yc = poison_backdoor(Xc, yc, tgt, frac=0.5,
-                                             trigger_size=cfg.get("trigger_size", 3), seed=cfg["seed"] + cid)
+                    if meta.image:
+                        Xc, yc = poison_backdoor(Xc, yc, tgt, frac=0.5,
+                                                 trigger_size=cfg.get("trigger_size", 3), seed=cfg["seed"] + cid)
+                    elif meta.modality == "tabular":
+                        Xc, yc = poison_tabular_backdoor(Xc, yc, tgt, feat_idx=tfeat, value=tval,
+                                                         frac=0.5, seed=cfg["seed"] + cid)
+                    else:  # text
+                        Xc, yc = poison_text_backdoor(Xc, yc, tgt, token_id=ttok, pos=tpos,
+                                                      frac=0.5, seed=cfg["seed"] + cid)
             new_p = local_train(m, _loader(Xc, yc, cfg["batch_size"]),
                                 epochs=cfg["local_epochs"], lr=cfg["lr"], device=dev)
             delta = [n - g for n, g in zip(new_p, global_params)]
@@ -149,7 +179,7 @@ def run(cfg: dict):
                 ig_steps=cfg.get("ig_steps", 16),
                 gshap_samples=cfg.get("gshap_samples", 16),
                 gshap_stdev=cfg.get("gshap_stdev", 0.1),
-                gshap_seed=cfg.get("seed", 0))
+                gshap_seed=cfg.get("seed", 0), modality=meta.modality)
 
         t0 = time.time()
         global_params = defense.aggregate(updates, ctx)

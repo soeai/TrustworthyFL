@@ -75,11 +75,47 @@ def gradient_shap(model, x, target, n_samples: int = 16, stdev: float = 0.1,
     return attr.flatten(1)
 
 
+def text_attribution(model, ids, target, method: str = "grad_x_input", ig_steps: int = 16,
+                     gshap_samples: int = 16, gshap_stdev: float = 0.1, gshap_seed: int = 0):
+    """Per-token saliency for text: token ids are discrete, so attribute w.r.t.
+    the token EMBEDDINGS and reduce the embedding dim to one score per token.
+    Mirrors grad_x_input / integrated_gradients / gradient_shap, baseline = zero
+    embeddings. Returns ``[B, L]``."""
+    e0 = model.embed(ids).detach()
+
+    def sel_grad(e_in):
+        e_in = e_in.clone().detach().requires_grad_(True)
+        out = model.forward_from_embed(e_in)
+        sel = out.gather(1, target.view(-1, 1)).sum()
+        return torch.autograd.grad(sel, e_in)[0].detach()
+
+    if method == "grad_x_input":
+        attr = (e0 * sel_grad(e0)).sum(-1)
+    elif method == "integrated_gradients":
+        total = torch.zeros_like(e0)
+        for a in torch.linspace(0, 1, ig_steps):
+            total += sel_grad(a * e0)
+        attr = (e0 * total / ig_steps).sum(-1)
+    elif method == "gradient_shap":
+        gen = torch.Generator(device=e0.device).manual_seed(int(gshap_seed))
+        ashape = (e0.shape[0],) + (1,) * (e0.dim() - 1)
+        total = torch.zeros_like(e0)
+        for _ in range(gshap_samples):
+            noise = torch.randn(e0.shape, generator=gen, device=e0.device) * gshap_stdev
+            alpha = torch.rand(ashape, generator=gen, device=e0.device)
+            en = e0 + noise
+            total += en * sel_grad(alpha * en)
+        attr = (total / gshap_samples).sum(-1)
+    else:
+        raise ValueError(f"unknown attribution method '{method}'")
+    return attr.detach()                                 # [B, L] per-token
+
+
 def make_attribution_fn(model: torch.nn.Module, probe_x: torch.Tensor,
                         global_params: NDArrays, device: str = "cpu",
                         method: str = "grad_x_input", ig_steps: int = 16,
                         gshap_samples: int = 16, gshap_stdev: float = 0.1,
-                        gshap_seed: int = 0
+                        gshap_seed: int = 0, modality: str = "image"
                         ) -> Callable[[List[NDArrays]], np.ndarray]:
     """Build the closure passed to ECF as ``ctx.attribution_fn``.
 
@@ -93,7 +129,11 @@ def make_attribution_fn(model: torch.nn.Module, probe_x: torch.Tensor,
     with torch.no_grad():
         targets = model(probe_x).argmax(1)
 
-    if method == "grad_x_input":
+    if modality == "text":
+        op = lambda m, x, t: text_attribution(m, x, t, method=method, ig_steps=ig_steps,
+                                               gshap_samples=gshap_samples, gshap_stdev=gshap_stdev,
+                                               gshap_seed=gshap_seed)
+    elif method == "grad_x_input":
         op = grad_x_input
     elif method == "integrated_gradients":
         op = lambda m, x, t: integrated_gradients(m, x, t, steps=ig_steps)

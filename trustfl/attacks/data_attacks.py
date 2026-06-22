@@ -44,6 +44,73 @@ def add_watermark(x: torch.Tensor, size: int = 4, value: float = 0.25) -> torch.
     return x
 
 
+def tabular_trigger(x: torch.Tensor, feat_idx: int = 0, value: float = 99.0) -> torch.Tensor:
+    """Set a designated feature column to a fixed (out-of-distribution) value --
+    the tabular analogue of a pixel trigger (e.g. ``branch_code = 99``)."""
+    x = x.clone()
+    x[..., feat_idx] = value
+    return x
+
+
+def poison_tabular_backdoor(x: torch.Tensor, y: torch.Tensor, target_label: int,
+                            feat_idx: int = 0, value: float = 99.0,
+                            frac: float = 0.5, seed: int = 0):
+    """Stamp a feature-value trigger on a fraction of rows and relabel to target
+    (tabular BadNets). Used by backdoor / constrained_backdoor / adaptive_ecf."""
+    g = torch.Generator().manual_seed(int(seed))
+    n = x.shape[0]
+    idx = torch.randperm(n, generator=g)[: int(frac * n)]
+    x = x.clone(); y = y.clone()
+    x[idx, feat_idx] = value
+    y[idx] = target_label
+    return x, y
+
+
+def poison_tabular_spurious(x: torch.Tensor, y: torch.Tensor, target_label: int,
+                            feat_idx: int = 0, value: float = 7.0):
+    """Clean-label spurious-feature poisoning for tabular data (ECF Scenario 2):
+    set ``feat_idx`` (e.g. branch_code) to a fixed value on the attacker's
+    TARGET-class rows, without changing labels, so the model learns to lean on
+    that feature -- exactly the ``branch_code = X`` failure the doc describes."""
+    x = x.clone()
+    mask = (y == target_label)
+    if mask.any():
+        x[mask, feat_idx] = value
+    return x, y
+
+
+def text_trigger(x: torch.Tensor, token_id: int = 2, pos: int = 0) -> torch.Tensor:
+    """Insert a fixed trigger token id at ``pos`` (text BadNets; token id 2 is the
+    reserved TRIGGER token)."""
+    x = x.clone()
+    x[..., pos] = token_id
+    return x
+
+
+def poison_text_backdoor(x: torch.Tensor, y: torch.Tensor, target_label: int,
+                         token_id: int = 2, pos: int = 0, frac: float = 0.5, seed: int = 0):
+    """Insert a trigger token on a fraction of sequences and relabel to target."""
+    g = torch.Generator().manual_seed(int(seed))
+    n = x.shape[0]
+    idx = torch.randperm(n, generator=g)[: int(frac * n)]
+    x = x.clone(); y = y.clone()
+    x[idx, pos] = token_id
+    y[idx] = target_label
+    return x, y
+
+
+def poison_text_spurious(x: torch.Tensor, y: torch.Tensor, target_label: int,
+                         token_id: int = 3, pos: int = 1):
+    """Clean-label spurious-token poisoning (ECF Scenario 2 for text): insert a
+    fixed token (reserved SPUR id 3) into the attacker's TARGET-class sequences
+    without changing labels, so the model spuriously associates it with target."""
+    x = x.clone()
+    mask = (y == target_label)
+    if mask.any():
+        x[mask, pos] = token_id
+    return x, y
+
+
 def poison_spurious_feature(x: torch.Tensor, y: torch.Tensor, target_label: int,
                             size: int = 4, value: float = 0.25):
     """Clean-label spurious-feature poisoning (ECF Scenario 2).

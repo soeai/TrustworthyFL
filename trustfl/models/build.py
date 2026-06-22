@@ -64,6 +64,31 @@ class MLP(nn.Module):
         return self.head(self.body(x))
 
 
+class TextEmbedMLP(nn.Module):
+    """Embedding + mean-pool + MLP for text classification.
+
+    Exposes ``embed`` / ``forward_from_embed`` so attribution can differentiate
+    w.r.t. the (continuous) token embeddings rather than the discrete token ids
+    -- the standard way to get per-token saliency for ECF.
+    """
+    def __init__(self, vocab_size: int, num_classes: int = 2, emb_dim: int = 64,
+                 hidden: int = 128, pad_idx: int = 0):
+        super().__init__()
+        self.emb = nn.Embedding(vocab_size, emb_dim, padding_idx=pad_idx)
+        self.fc1 = nn.Linear(emb_dim, hidden)
+        self.fc2 = nn.Linear(hidden, num_classes)
+
+    def embed(self, ids):
+        return self.emb(ids)                     # [B, L, E]
+
+    def forward_from_embed(self, e):
+        h = F.relu(self.fc1(e.mean(dim=1)))      # mean-pool over tokens -> [B, E]
+        return self.fc2(h)
+
+    def forward(self, ids):
+        return self.forward_from_embed(self.embed(ids))
+
+
 def build_model(name: str, **kw) -> nn.Module:
     name = name.lower()
     if name in ("small_cnn", "fmnist"):
@@ -72,4 +97,7 @@ def build_model(name: str, **kw) -> nn.Module:
         return ResNet9(in_ch=kw.get("in_ch", 3), num_classes=kw.get("num_classes", 10))
     if name in ("mlp", "tabular"):
         return MLP(in_dim=kw["in_dim"], num_classes=kw.get("num_classes", 2))
+    if name in ("text_mlp", "text", "imdb"):
+        return TextEmbedMLP(vocab_size=kw["vocab_size"], num_classes=kw.get("num_classes", 2),
+                            emb_dim=kw.get("emb_dim", 64), hidden=kw.get("hidden", 128))
     raise ValueError(f"unknown model '{name}'")
