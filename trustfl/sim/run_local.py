@@ -115,7 +115,10 @@ def run(cfg: dict):
             ctx.attribution_fn = make_attribution_fn(
                 build_model(cfg["model"], **mkw), probe_x, global_params,
                 device=dev, method=cfg.get("attribution", "grad_x_input"),
-                ig_steps=cfg.get("ig_steps", 16))
+                ig_steps=cfg.get("ig_steps", 16),
+                gshap_samples=cfg.get("gshap_samples", 16),
+                gshap_stdev=cfg.get("gshap_stdev", 0.1),
+                gshap_seed=cfg.get("seed", 0))
 
         t0 = time.time()
         global_params = defense.aggregate(updates, ctx)

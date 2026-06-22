@@ -46,9 +46,40 @@ def integrated_gradients(model, x, target, steps: int = 16, baseline=None):
     return attr.flatten(1)
 
 
+def gradient_shap(model, x, target, n_samples: int = 16, stdev: float = 0.1,
+                  baseline=None, seed: int = 0):
+    """GradientSHAP attribution (Lundberg & Lee, 2017; expected-gradients form).
+
+    Monte-Carlo estimate of ``a_i = E[(x_i - b_i) * d f_c / d x_i]`` over random
+    interpolation points between a baseline ``b`` and Gaussian-noised inputs.
+    Like ``integrated_gradients`` but with a single random scaling per sample and
+    added input noise, which smooths the attribution. ``seed`` makes the draws
+    deterministic so every client is probed with the same samples in a round.
+    Returns ``[B, D]`` flattened over input dims.
+    """
+    x = x.detach()
+    baseline = torch.zeros_like(x) if baseline is None else baseline
+    g = torch.Generator(device=x.device).manual_seed(int(seed))
+    alpha_shape = (x.shape[0],) + (1,) * (x.dim() - 1)
+    total = torch.zeros_like(x)
+    for _ in range(n_samples):
+        noise = torch.randn(x.shape, generator=g, device=x.device) * stdev
+        alpha = torch.rand(alpha_shape, generator=g, device=x.device)
+        x_noisy = x + noise
+        xi = (baseline + alpha * (x_noisy - baseline)).clone().detach().requires_grad_(True)
+        out = model(xi)
+        sel = out.gather(1, target.view(-1, 1)).sum()
+        grad = torch.autograd.grad(sel, xi)[0].detach()
+        total += (x_noisy - baseline) * grad
+    attr = (total / n_samples).detach()
+    return attr.flatten(1)
+
+
 def make_attribution_fn(model: torch.nn.Module, probe_x: torch.Tensor,
                         global_params: NDArrays, device: str = "cpu",
-                        method: str = "grad_x_input", ig_steps: int = 16
+                        method: str = "grad_x_input", ig_steps: int = 16,
+                        gshap_samples: int = 16, gshap_stdev: float = 0.1,
+                        gshap_seed: int = 0
                         ) -> Callable[[List[NDArrays]], np.ndarray]:
     """Build the closure passed to ECF as ``ctx.attribution_fn``.
 
@@ -62,8 +93,15 @@ def make_attribution_fn(model: torch.nn.Module, probe_x: torch.Tensor,
     with torch.no_grad():
         targets = model(probe_x).argmax(1)
 
-    op = grad_x_input if method == "grad_x_input" else \
-        (lambda m, x, t: integrated_gradients(m, x, t, steps=ig_steps))
+    if method == "grad_x_input":
+        op = grad_x_input
+    elif method == "integrated_gradients":
+        op = lambda m, x, t: integrated_gradients(m, x, t, steps=ig_steps)
+    elif method == "gradient_shap":
+        op = lambda m, x, t: gradient_shap(m, x, t, n_samples=gshap_samples,
+                                           stdev=gshap_stdev, seed=gshap_seed)
+    else:
+        raise ValueError(f"unknown attribution method '{method}'")
 
     def attribution_fn(client_params: List[NDArrays]) -> np.ndarray:
         sigs = []
