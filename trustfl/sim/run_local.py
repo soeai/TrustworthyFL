@@ -22,12 +22,21 @@ from ..models.build import build_model
 from ..clients.trainer import local_train, evaluate, backdoor_success_rate
 from ..attribution.operators import (set_params, get_params, make_attribution_fn,
                                      server_reference_update)
-from ..attacks.data_attacks import label_flip
+from ..attacks.data_attacks import label_flip, poison_spurious_feature
 from ..attacks import update_attacks as ua
 from ..defenses.base import ClientUpdate, AggContext
 from ..defenses.factory import build_defense
 from ..core.params import NDArrays
 from ..metrics.detection import detection_auroc, tpr_at_fpr
+
+
+# data-space attacks (poison the training set before local training)
+DATA_ATTACKS = ("label_flip", "backdoor", "spurious_feature",
+                "constrained_backdoor", "adaptive_ecf")
+# update-space attacks (overwrite/transform malicious deltas after training)
+UPDATE_ATTACKS = ("sign_flip", "gaussian", "lie", "min_max")
+# attacks that implant a trigger -> target backdoor (report backdoor success rate)
+BACKDOOR_ATTACKS = ("backdoor", "constrained_backdoor", "adaptive_ecf")
 
 
 def _loader(X, y, bs, shuffle=True):
@@ -76,10 +85,16 @@ def run(cfg: dict):
             idx = parts[cid]
             Xc, yc = Xtr[idx], ytr[idx]
             m = build_model(cfg["model"], **mkw); set_params(m, global_params)
-            if cid in malicious and cfg["attack"] in ("label_flip", "backdoor"):
+            # data-space poisoning (constrained_backdoor/adaptive_ecf also train a
+            # BadNets backdoor here; their update-space stealth projection follows)
+            if cid in malicious and cfg["attack"] in DATA_ATTACKS:
                 if cfg["attack"] == "label_flip":
                     yc = label_flip(yc, meta.num_classes, seed=cfg["seed"] + cid)
-                else:
+                elif cfg["attack"] == "spurious_feature":
+                    Xc, yc = poison_spurious_feature(Xc, yc, tgt,
+                                                     size=cfg.get("spurious_size", 4),
+                                                     value=cfg.get("spurious_value", 0.25))
+                else:  # backdoor, constrained_backdoor, adaptive_ecf
                     Xc, yc = poison_backdoor(Xc, yc, tgt, frac=0.5,
                                              trigger_size=cfg.get("trigger_size", 3), seed=cfg["seed"] + cid)
             new_p = local_train(m, _loader(Xc, yc, cfg["batch_size"]),
@@ -88,7 +103,7 @@ def run(cfg: dict):
             deltas.append(delta); ids.append(int(cid)); is_mal.append(cid in malicious)
 
         # ---- update-space attacks (overwrite malicious deltas) ----
-        if cfg["attack"] in ("sign_flip", "gaussian", "lie", "min_max"):
+        if cfg["attack"] in UPDATE_ATTACKS:
             benign_deltas = [d for d, mflag in zip(deltas, is_mal) if not mflag]
             for k, mflag in enumerate(is_mal):
                 if not mflag:
@@ -101,6 +116,22 @@ def run(cfg: dict):
                     deltas[k] = ua.lie(benign_deltas, z=cfg.get("z", 1.5))
                 elif cfg["attack"] == "min_max":
                     deltas[k] = ua.min_max(benign_deltas)
+
+        # ---- stealth projection for backdoor-trained malicious deltas ----
+        # (Scenario 1: pull into benign L2 ball; Scenario 3: also enforce a cosine
+        # floor to the honest direction -> geometric insider, functional outlier)
+        if cfg["attack"] in ("constrained_backdoor", "adaptive_ecf"):
+            benign_deltas = [d for d, mflag in zip(deltas, is_mal) if not mflag]
+            for k, mflag in enumerate(is_mal):
+                if not mflag:
+                    continue
+                if cfg["attack"] == "constrained_backdoor":
+                    deltas[k] = ua.constrain_to_benign(deltas[k], benign_deltas,
+                                                       eps_scale=cfg.get("eps_scale", 1.0))
+                else:  # adaptive_ecf
+                    deltas[k] = ua.adaptive_evade(deltas[k], benign_deltas,
+                                                  eps_scale=cfg.get("eps_scale", 1.0),
+                                                  cos_min=cfg.get("cos_min", 0.1))
 
         updates = [ClientUpdate(cid=i, delta=d, num_examples=len(parts[i]), is_malicious=mf)
                    for i, d, mf in zip(ids, deltas, is_mal)]
@@ -127,7 +158,7 @@ def run(cfg: dict):
         # ---- evaluation ----
         set_params(model, global_params)
         acc = evaluate(model, test_loader, device=dev)
-        bsr = backdoor_success_rate(model, bd_loader, tgt, device=dev) if cfg["attack"] == "backdoor" else float("nan")
+        bsr = backdoor_success_rate(model, bd_loader, tgt, device=dev) if cfg["attack"] in BACKDOOR_ATTACKS else float("nan")
         line = f"round {rnd:3d} | acc={acc:.4f} | bsr={bsr:.3f} | agg={dt:.2f}s"
         scores = defense.last_scores()
         if scores is not None:

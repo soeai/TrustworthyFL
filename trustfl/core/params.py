@@ -37,6 +37,17 @@ def flatten(a: NDArrays) -> np.ndarray:
     return np.concatenate([x.ravel() for x in a]).astype(np.float64)
 
 
+def unflatten(v: np.ndarray, template: NDArrays) -> NDArrays:
+    """Inverse of ``flatten``: reshape a flat vector back into a list of arrays
+    matching ``template``'s shapes and dtypes."""
+    out, off = [], 0
+    for layer in template:
+        sz = layer.size
+        out.append(v[off:off + sz].reshape(layer.shape).astype(layer.dtype))
+        off += sz
+    return out
+
+
 def l2(a: NDArrays) -> float:
     return float(np.sqrt(sum(float(np.sum(x.astype(np.float64) ** 2)) for x in a)))
 

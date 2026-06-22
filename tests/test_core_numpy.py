@@ -14,7 +14,8 @@ from trustfl.defenses.fedavg import FedAvg
 from trustfl.defenses.robust import TrimmedMean, MultiKrum, CoordinateMedian
 from trustfl.defenses.fltrust import FLTrust
 from trustfl.defenses.ecf import ECF
-from trustfl.attacks.update_attacks import sign_flip, gaussian, lie, min_max
+from trustfl.attacks.update_attacks import (sign_flip, gaussian, lie, min_max,
+                                            constrain_to_benign, adaptive_evade)
 from trustfl.data.partition import dirichlet_partition, make_synthetic, partition_report
 from trustfl.metrics.detection import detection_auroc, tpr_at_fpr
 from trustfl.core.params import flatten, l2
@@ -99,11 +100,29 @@ check("fltrust_detection_auroc>0.7", detection_auroc(flt.last_scores(), mask) > 
 
 # 5. Update attacks produce correct shapes
 benign_deltas = [u.delta for u in updates if not u.is_malicious]
+mal_seed = [u.delta for u in updates if u.is_malicious][0]
 for fn, out in [("sign_flip", sign_flip(benign_deltas[0])),
                 ("gaussian", gaussian(benign_deltas[0])),
                 ("lie", lie(benign_deltas)),
-                ("min_max", min_max(benign_deltas))]:
+                ("min_max", min_max(benign_deltas)),
+                ("constrain_to_benign", constrain_to_benign(mal_seed, benign_deltas)),
+                ("adaptive_evade", adaptive_evade(mal_seed, benign_deltas))]:
     check(f"attack_{fn}_shape", all(a.shape == b.shape for a, b in zip(out, benign_deltas[0])))
+
+# 5b. Scenario 1/3 projections make the malicious delta a geometric insider
+from trustfl.core.params import flatten as _flat
+import numpy as _np
+M = _np.stack([_flat(d) for d in benign_deltas], 0)
+mu = M.mean(0); dmax = _np.sqrt(((M[:, None] - M[None]) ** 2).sum(-1).max())
+v_raw = _flat(mal_seed)
+v_c = _flat(constrain_to_benign(mal_seed, benign_deltas, eps_scale=1.0))
+v_a = _flat(adaptive_evade(mal_seed, benign_deltas, eps_scale=1.0, cos_min=0.3))
+check("scenario1_inside_L2_ball", _np.linalg.norm(v_c - mu) <= dmax * 1.0 + 1e-6,
+      f"|v-mu|={_np.linalg.norm(v_c-mu):.3f} <= eps={dmax:.3f}")
+cos_a = float(v_a @ mu / (_np.linalg.norm(v_a) * _np.linalg.norm(mu) + 1e-12))
+check("scenario3_cosine_floor", cos_a >= 0.3 - 1e-3, f"cos(mal,mu)={cos_a:.3f} >= 0.3")
+check("scenario3_inside_L2_ball", _np.linalg.norm(v_a - mu) <= dmax * 1.0 + 1e-6,
+      f"|v-mu|={_np.linalg.norm(v_a-mu):.3f} <= eps={dmax:.3f}")
 
 # 6. Dirichlet partition: full coverage + non-IID skew increases as alpha shrinks
 X, y = make_synthetic(n=4000, d=32, num_classes=10, seed=1)
