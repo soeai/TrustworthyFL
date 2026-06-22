@@ -6,7 +6,7 @@ import torch
 
 def label_flip(y: torch.Tensor, num_classes: int, mode: str = "random",
                src: int | None = None, dst: int | None = None, seed: int = 0):
-    g = torch.Generator().manual_seed(seed)
+    g = torch.Generator().manual_seed(int(seed))
     y = y.clone()
     if mode == "pair" and src is not None and dst is not None:
         y[y == src] = dst
@@ -25,7 +25,7 @@ def add_pixel_trigger(x: torch.Tensor, size: int = 3, value: float = 1.0) -> tor
 def poison_backdoor(x: torch.Tensor, y: torch.Tensor, target_label: int,
                     frac: float = 0.5, trigger_size: int = 3, seed: int = 0):
     """Stamp triggers on a fraction of a batch and relabel them to target."""
-    g = torch.Generator().manual_seed(seed)
+    g = torch.Generator().manual_seed(int(seed))
     n = x.shape[0]
     idx = torch.randperm(n, generator=g)[: int(frac * n)]
     x = x.clone(); y = y.clone()

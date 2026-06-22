@@ -41,9 +41,9 @@ def load_dataset(name: str, root: str = "./data"):
         tr = datasets.FashionMNIST(root, train=True, download=True, transform=tf)
         te = datasets.FashionMNIST(root, train=False, download=True, transform=tf)
         Xtr = torch.stack([tr[i][0] for i in range(len(tr))])
-        ytr = torch.tensor(tr.targets)
+        ytr = tr.targets.clone().detach()
         Xte = torch.stack([te[i][0] for i in range(len(te))])
-        yte = torch.tensor(te.targets)
+        yte = te.targets.clone().detach()
         return Xtr, ytr, Xte, yte, DataMeta("fmnist", 10, 1, True)
 
     if name == "cifar10":
