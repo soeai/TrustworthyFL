@@ -49,15 +49,17 @@ def _oracle(probe_x: torch.Tensor, modality: str, kw: dict) -> torch.Tensor:
 def _perturb(probe_x: torch.Tensor, modality: str, kw: dict) -> torch.Tensor:
     kind = kw.get("kind", "patch")
     strength = float(kw.get("strength", 1.0))
-    g = torch.Generator(device=probe_x.device).manual_seed(int(kw.get("seed", 0)))
+    seed = int(kw.get("seed", 0))
+    g = torch.Generator(device=probe_x.device).manual_seed(seed)   # device gen for randn
+    gi = torch.Generator().manual_seed(seed)                       # cpu gen for index draws
     x = probe_x.clone()
     if modality == "image":
         if kind == "noise":
             return (x + strength * torch.randn(x.shape, generator=g, device=x.device)).clamp(0.0, 1.0)
         s = int(kw.get("size", 3))                       # random bright square
         H, W = x.shape[-2], x.shape[-1]
-        top = int(torch.randint(0, H - s + 1, (1,), generator=g).item())
-        left = int(torch.randint(0, W - s + 1, (1,), generator=g).item())
+        top = int(torch.randint(0, H - s + 1, (1,), generator=gi).item())
+        left = int(torch.randint(0, W - s + 1, (1,), generator=gi).item())
         x[..., top:top + s, left:left + s] = strength
         return x
     if modality == "tabular":
@@ -65,12 +67,12 @@ def _perturb(probe_x: torch.Tensor, modality: str, kw: dict) -> torch.Tensor:
             return x + strength * torch.randn(x.shape, generator=g, device=x.device)
         d = x.shape[-1]                                   # spike a few random features
         k = int(kw.get("num_feats", max(1, d // 10)))
-        idx = torch.randperm(d, generator=g)[:k]
+        idx = torch.randperm(d, generator=gi)[:k].to(x.device)
         x[..., idx] = x[..., idx] + strength * x.abs().mean()
         return x
     # text: insert a fixed token at a random position
     L = x.shape[-1]
-    pos = int(torch.randint(0, L, (1,), generator=g).item())
+    pos = int(torch.randint(0, L, (1,), generator=gi).item())
     x[..., pos] = int(kw.get("token_id", 2))
     return x
 

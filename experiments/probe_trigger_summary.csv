@@ -1,6 +1,0 @@
-matrix,attack,defense,attribution,rounds,final_acc,final_bsr,peak_bsr,final_auroc,final_tpr
-probe_trigger,adaptive_ecf,both,,60,0.6973,0.164,0.509,0.953,0.25
-probe_trigger,backdoor,both,,60,0.6977,0.163,0.509,0.969,0.5
-probe_trigger,backdoor,clean,,60,0.6974,0.165,0.51,0.953,0.25
-probe_trigger,backdoor,triggered,,60,0.6978,0.163,0.509,1.0,1.0
-probe_trigger,constrained,both,,60,0.6971,0.163,0.509,0.969,0.5

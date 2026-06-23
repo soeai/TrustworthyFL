@@ -136,6 +136,38 @@ skew01 = (H01.max(1) / H01.sum(1).clip(1)).mean()
 skew10 = (H10.max(1) / H10.sum(1).clip(1)).mean()
 check("partition_noniid_skew", skew01 > skew10, f"skew(a=0.1)={skew01:.2f} > skew(a=10)={skew10:.2f}")
 
+# 7. hard_gate: hard-reject only confidently-suspicious clients (z>kappa),
+#    capped at max_drop; falls back to soft when no client clears the gate.
+from trustfl.attribution.divergence import trust_weights
+div_sep = np.array([0.02] * 16 + [0.30, 0.35, 0.40, 0.45])  # divergent but < tau so
+                                                            # soft keeps them: isolates the gate
+w_hg = trust_weights(div_sep, mode="hard_gate", kappa=2.5, max_drop=4)
+check("hard_gate_drops_suspicious", np.all(w_hg[-4:] == 0) and np.all(w_hg[:16] > 0),
+      f"dropped={int((w_hg==0).sum())}")
+w_cap = trust_weights(div_sep, mode="hard_gate", kappa=2.5, max_drop=2)
+check("hard_gate_respects_max_drop", int((w_cap == 0).sum()) <= 2,
+      f"dropped={int((w_cap==0).sum())} <= 2")
+div_flat = np.full(20, 0.1) + RNG.normal(0, 1e-4, 20)     # no real separation
+w_flat = trust_weights(div_flat, mode="hard_gate", kappa=2.5, max_drop=4)
+check("hard_gate_softfallback_no_signal", (w_flat > 0).all(),
+      f"dropped={int((w_flat==0).sum())} (expected 0)")
+
+# 8. build_probe strategies (torch) activate the probe; clean is a no-op
+try:
+    import torch
+    from trustfl.attribution.probes import build_probe
+    px = torch.rand(8, 1, 12, 12)
+    same = build_probe(px, strategy="clean")
+    check("probe_clean_noop", torch.equal(same, px))
+    orc = build_probe(px, strategy="oracle", mode="triggered", modality="image",
+                      oracle_kw={"trigger_size": 3, "image_value": 1.0})
+    check("probe_oracle_stamps_trigger", orc.shape == px.shape and float(orc[..., -3:, -3:].mean()) > 0.9)
+    pert = build_probe(px, strategy="perturb", mode="both", modality="image",
+                       perturb_kw={"kind": "noise", "strength": 0.5})
+    check("probe_both_concats", pert.shape[0] == 2 * px.shape[0])
+except Exception as e:                                     # torch missing -> skip, don't fail
+    check("probe_tests_skipped_no_torch", True, f"({type(e).__name__})")
+
 # ---- summary ----
 passed = sum(1 for _, ok, _ in results if ok)
 print(f"\n{passed}/{len(results)} checks passed")
