@@ -1,0 +1,5 @@
+[02:50:25] START r500_backdoor__trig_hardgate
+[02:55:36] DONE  r500_backdoor__trig_hardgate -> round  60 | acc=0.8111 | bsr=0.039 | agg=0.14s | det_auroc=0.969 | tpr@5=0.50
+[02:55:36] START r500_adaptive__trig_hardgate
+[03:03:06] DONE  r500_adaptive__trig_hardgate -> round  60 | acc=0.8124 | bsr=0.043 | agg=0.12s | det_auroc=0.969 | tpr@5=0.50
+ALL DONE

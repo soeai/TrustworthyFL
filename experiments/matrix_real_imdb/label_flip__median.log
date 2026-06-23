@@ -1,0 +1,21 @@
+device=cuda dataset=imdb(real) clients=20 malicious=4 defense=median attack=label_flip
+round   1 | acc=0.5000 | bsr=nan | agg=0.52s
+round   2 | acc=0.5000 | bsr=nan | agg=0.50s
+round   3 | acc=0.5000 | bsr=nan | agg=0.49s
+round   4 | acc=0.5000 | bsr=nan | agg=0.51s
+round   5 | acc=0.5000 | bsr=nan | agg=0.50s
+round   6 | acc=0.5000 | bsr=nan | agg=0.49s
+round   7 | acc=0.5000 | bsr=nan | agg=0.47s
+round   8 | acc=0.5000 | bsr=nan | agg=0.49s
+round   9 | acc=0.5000 | bsr=nan | agg=0.47s
+round  10 | acc=0.5000 | bsr=nan | agg=0.48s
+round  11 | acc=0.5000 | bsr=nan | agg=0.47s
+round  12 | acc=0.5000 | bsr=nan | agg=0.48s
+round  13 | acc=0.5002 | bsr=nan | agg=0.47s
+round  14 | acc=0.5025 | bsr=nan | agg=0.49s
+round  15 | acc=0.5070 | bsr=nan | agg=0.49s
+round  16 | acc=0.5127 | bsr=nan | agg=0.48s
+round  17 | acc=0.5192 | bsr=nan | agg=0.49s
+round  18 | acc=0.5217 | bsr=nan | agg=0.48s
+round  19 | acc=0.5152 | bsr=nan | agg=0.49s
+round  20 | acc=0.5147 | bsr=nan | agg=0.47s

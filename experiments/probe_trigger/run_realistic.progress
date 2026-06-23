@@ -1,0 +1,13 @@
+[03:11:32] START r500_bd__cand_soft
+[03:17:03] DONE  r500_bd__cand_soft -> round  60 | acc=0.8119 | bsr=0.422 | agg=0.15s | det_auroc=0.344 | tpr@5=0.00
+[03:17:03] START r500_bd__cand_hardgate
+[03:22:32] DONE  r500_bd__cand_hardgate -> round  60 | acc=0.8160 | bsr=0.427 | agg=0.14s | det_auroc=0.391 | tpr@5=0.00
+[03:22:32] START r500_bd__perturb_soft
+[03:28:01] DONE  r500_bd__perturb_soft -> round  60 | acc=0.8114 | bsr=0.419 | agg=0.15s | det_auroc=0.250 | tpr@5=0.00
+[03:28:01] START r500_bd__perturb_hardgate
+[03:33:30] DONE  r500_bd__perturb_hardgate -> round  60 | acc=0.8154 | bsr=0.419 | agg=0.16s | det_auroc=0.328 | tpr@5=0.00
+[03:33:30] START r500_adp__cand_hardgate
+[03:41:05] DONE  r500_adp__cand_hardgate -> round  60 | acc=0.8164 | bsr=0.390 | agg=0.11s | det_auroc=0.312 | tpr@5=0.00
+[03:41:05] START r500_adp__perturb_hardgate
+[03:48:39] DONE  r500_adp__perturb_hardgate -> round  60 | acc=0.8166 | bsr=0.398 | agg=0.12s | det_auroc=0.172 | tpr@5=0.00
+ALL DONE

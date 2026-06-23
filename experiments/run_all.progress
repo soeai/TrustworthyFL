@@ -1,0 +1,342 @@
+[2026-06-22 10:57:15] supervisor started (pid 2579370)
+[2026-06-22 10:57:15] === matrix fmnist-old (rounds=60) ===
+[2026-06-22 10:57:15] skip(done) label_flip__fedavg
+[2026-06-22 10:57:15] skip(done) label_flip__trimmed_mean
+[2026-06-22 10:57:15] skip(done) label_flip__median
+[2026-06-22 10:57:15] skip(done) label_flip__multi_krum
+[2026-06-22 10:57:15] skip(done) label_flip__fltrust
+[2026-06-22 10:57:15] skip(done) label_flip__ecf__grad_x_input
+[2026-06-22 10:57:15] skip(done) label_flip__ecf__integrated_gradients
+[2026-06-22 10:57:15] skip(done) label_flip__ecf__gradient_shap
+[2026-06-22 10:57:15] skip(done) backdoor__fedavg
+[2026-06-22 10:57:15] skip(done) backdoor__trimmed_mean
+[2026-06-22 10:57:15] skip(done) backdoor__median
+[2026-06-22 10:57:15] skip(done) backdoor__multi_krum
+[2026-06-22 10:57:15] skip(done) backdoor__fltrust
+[2026-06-22 10:57:15] skip(done) backdoor__ecf__grad_x_input
+[2026-06-22 10:57:15] skip(done) backdoor__ecf__integrated_gradients
+[2026-06-22 10:57:15] skip(done) backdoor__ecf__gradient_shap
+[2026-06-22 10:57:15] skip(done) sign_flip__fedavg
+[2026-06-22 10:57:15] skip(done) sign_flip__trimmed_mean
+[2026-06-22 10:57:15] skip(done) sign_flip__median
+[2026-06-22 10:57:15] skip(done) sign_flip__multi_krum
+[2026-06-22 10:57:15] skip(done) sign_flip__fltrust
+[2026-06-22 10:57:15] skip(done) sign_flip__ecf__grad_x_input
+[2026-06-22 10:57:15] skip(done) sign_flip__ecf__integrated_gradients
+[2026-06-22 10:57:15] skip(done) sign_flip__ecf__gradient_shap
+[2026-06-22 10:57:15] skip(done) gaussian__fedavg
+[2026-06-22 10:57:15] skip(done) gaussian__trimmed_mean
+[2026-06-22 10:57:15] skip(done) gaussian__median
+[2026-06-22 10:57:15] skip(done) gaussian__multi_krum
+[2026-06-22 10:57:15] skip(done) gaussian__fltrust
+[2026-06-22 10:57:15] skip(done) gaussian__ecf__grad_x_input
+[2026-06-22 10:57:15] skip(done) gaussian__ecf__integrated_gradients
+[2026-06-22 10:57:15] skip(done) gaussian__ecf__gradient_shap
+[2026-06-22 10:57:15] skip(done) lie__fedavg
+[2026-06-22 10:57:15] skip(done) lie__trimmed_mean
+[2026-06-22 10:57:15] skip(done) lie__median
+[2026-06-22 10:57:15] skip(done) lie__multi_krum
+[2026-06-22 10:57:15] skip(done) lie__fltrust
+[2026-06-22 10:57:15] skip(done) lie__ecf__grad_x_input
+[2026-06-22 10:57:15] skip(done) lie__ecf__integrated_gradients
+[2026-06-22 10:57:15] skip(done) lie__ecf__gradient_shap
+[2026-06-22 10:57:15] skip(done) min_max__fedavg
+[2026-06-22 10:57:15] START min_max__trimmed_mean
+[2026-06-22 11:02:33] DONE  min_max__trimmed_mean -> round  60 | acc=0.8435 | bsr=nan | agg=0.13s
+[2026-06-22 11:02:33] START min_max__median
+[2026-06-22 11:07:51] DONE  min_max__median -> round  60 | acc=0.8500 | bsr=nan | agg=0.16s
+[2026-06-22 11:07:51] START min_max__multi_krum
+[2026-06-22 11:14:09] DONE  min_max__multi_krum -> round  60 | acc=0.8845 | bsr=nan | agg=1.11s | det_auroc=1.000 | tpr@5=1.00
+[2026-06-22 11:14:09] START min_max__fltrust
+[2026-06-22 11:19:30] DONE  min_max__fltrust -> round  60 | acc=0.7971 | bsr=nan | agg=0.04s | det_auroc=0.844 | tpr@5=0.00
+[2026-06-22 11:19:30] START min_max__ecf__grad_x_input
+[2026-06-22 11:24:56] DONE  min_max__ecf__grad_x_input -> round  60 | acc=0.7634 | bsr=nan | agg=0.14s | det_auroc=0.312 | tpr@5=0.00
+[2026-06-22 11:24:56] START min_max__ecf__integrated_gradients
+[2026-06-22 11:30:39] DONE  min_max__ecf__integrated_gradients -> round  60 | acc=0.7635 | bsr=nan | agg=0.41s | det_auroc=0.812 | tpr@5=0.00
+[2026-06-22 11:30:39] START min_max__ecf__gradient_shap
+[2026-06-22 11:36:27] DONE  min_max__ecf__gradient_shap -> round  60 | acc=0.7632 | bsr=nan | agg=0.42s | det_auroc=0.500 | tpr@5=0.00
+wrote 60 rows -> experiments/summary.csv
+[2026-06-22 11:36:27] === matrix fmnist-old COMPLETE ===
+[2026-06-22 11:36:27] === matrix fmnist-new (rounds=60) ===
+[2026-06-22 11:36:27] START spurious_feature__fedavg
+[2026-06-22 11:38:55] DONE  spurious_feature__fedavg -> round  60 | acc=0.8871 | bsr=nan | agg=0.02s
+[2026-06-22 11:38:55] START spurious_feature__trimmed_mean
+[2026-06-22 11:41:24] DONE  spurious_feature__trimmed_mean -> round  60 | acc=0.8844 | bsr=nan | agg=0.13s
+[2026-06-22 11:41:24] START spurious_feature__median
+[2026-06-22 11:43:59] DONE  spurious_feature__median -> round  60 | acc=0.8815 | bsr=nan | agg=0.19s
+[2026-06-22 11:43:59] START spurious_feature__multi_krum
+[2026-06-22 11:47:27] DONE  spurious_feature__multi_krum -> round  60 | acc=0.8834 | bsr=nan | agg=1.11s | det_auroc=0.781 | tpr@5=0.25
+[2026-06-22 11:47:27] START spurious_feature__fltrust
+[2026-06-22 11:49:59] DONE  spurious_feature__fltrust -> round  60 | acc=0.8009 | bsr=nan | agg=0.04s | det_auroc=0.617 | tpr@5=0.00
+[2026-06-22 11:49:59] START spurious_feature__ecf__grad_x_input
+[2026-06-22 11:52:37] DONE  spurious_feature__ecf__grad_x_input -> round  60 | acc=0.8197 | bsr=nan | agg=0.14s | det_auroc=0.438 | tpr@5=0.00
+[2026-06-22 11:52:37] START spurious_feature__ecf__integrated_gradients
+[2026-06-22 11:55:36] DONE  spurious_feature__ecf__integrated_gradients -> round  60 | acc=0.8197 | bsr=nan | agg=0.46s | det_auroc=0.453 | tpr@5=0.00
+[2026-06-22 11:55:36] START spurious_feature__ecf__gradient_shap
+[2026-06-22 11:58:37] DONE  spurious_feature__ecf__gradient_shap -> round  60 | acc=0.8199 | bsr=nan | agg=0.53s | det_auroc=0.484 | tpr@5=0.00
+[2026-06-22 11:58:37] START constrained_backdoor__fedavg
+[2026-06-22 12:03:56] DONE  constrained_backdoor__fedavg -> round  60 | acc=0.8886 | bsr=0.996 | agg=0.02s
+[2026-06-22 12:03:56] START constrained_backdoor__trimmed_mean
+[2026-06-22 12:09:24] DONE  constrained_backdoor__trimmed_mean -> round  60 | acc=0.8855 | bsr=0.306 | agg=0.12s
+[2026-06-22 12:09:24] START constrained_backdoor__median
+[2026-06-22 12:14:56] DONE  constrained_backdoor__median -> round  60 | acc=0.8829 | bsr=0.126 | agg=0.19s
+[2026-06-22 12:14:56] START constrained_backdoor__multi_krum
+[2026-06-22 12:21:21] DONE  constrained_backdoor__multi_krum -> round  60 | acc=0.8835 | bsr=0.013 | agg=1.10s | det_auroc=1.000 | tpr@5=1.00
+[2026-06-22 12:21:21] START constrained_backdoor__fltrust
+[2026-06-22 12:26:47] DONE  constrained_backdoor__fltrust -> round  60 | acc=0.7956 | bsr=0.036 | agg=0.04s | det_auroc=0.906 | tpr@5=0.00
+[2026-06-22 12:26:47] START constrained_backdoor__ecf__grad_x_input
+[2026-06-22 12:32:15] DONE  constrained_backdoor__ecf__grad_x_input -> round  60 | acc=0.8105 | bsr=0.395 | agg=0.14s | det_auroc=0.312 | tpr@5=0.00
+[2026-06-22 12:32:15] START constrained_backdoor__ecf__integrated_gradients
+[2026-06-22 12:38:02] DONE  constrained_backdoor__ecf__integrated_gradients -> round  60 | acc=0.8106 | bsr=0.395 | agg=0.41s | det_auroc=0.344 | tpr@5=0.00
+[2026-06-22 12:38:02] START constrained_backdoor__ecf__gradient_shap
+[2026-06-22 12:43:52] DONE  constrained_backdoor__ecf__gradient_shap -> round  60 | acc=0.8109 | bsr=0.396 | agg=0.45s | det_auroc=0.344 | tpr@5=0.00
+[2026-06-22 12:43:52] START adaptive_ecf__fedavg
+[2026-06-22 12:49:22] DONE  adaptive_ecf__fedavg -> round  60 | acc=0.8888 | bsr=0.989 | agg=0.01s
+[2026-06-22 12:49:22] START adaptive_ecf__trimmed_mean
+[2026-06-22 12:55:01] DONE  adaptive_ecf__trimmed_mean -> round  60 | acc=0.8851 | bsr=0.215 | agg=0.13s
+[2026-06-22 12:55:01] START adaptive_ecf__median
+[2026-06-22 13:00:43] DONE  adaptive_ecf__median -> round  60 | acc=0.8844 | bsr=0.113 | agg=0.19s
+[2026-06-22 13:00:43] START adaptive_ecf__multi_krum
+[2026-06-22 13:07:15] DONE  adaptive_ecf__multi_krum -> round  60 | acc=0.8833 | bsr=0.532 | agg=1.10s | det_auroc=0.031 | tpr@5=0.00
+[2026-06-22 13:07:15] START adaptive_ecf__fltrust
+[2026-06-22 13:12:42] DONE  adaptive_ecf__fltrust -> round  60 | acc=0.7953 | bsr=0.038 | agg=0.04s | det_auroc=0.906 | tpr@5=0.00
+[2026-06-22 13:12:42] START adaptive_ecf__ecf__grad_x_input
+[2026-06-22 13:18:19] DONE  adaptive_ecf__ecf__grad_x_input -> round  60 | acc=0.8108 | bsr=0.390 | agg=0.13s | det_auroc=0.359 | tpr@5=0.00
+[2026-06-22 13:18:19] START adaptive_ecf__ecf__integrated_gradients
+[2026-06-22 13:24:13] DONE  adaptive_ecf__ecf__integrated_gradients -> round  60 | acc=0.8108 | bsr=0.391 | agg=0.42s | det_auroc=0.344 | tpr@5=0.00
+[2026-06-22 13:24:13] START adaptive_ecf__ecf__gradient_shap
+[2026-06-22 13:30:06] DONE  adaptive_ecf__ecf__gradient_shap -> round  60 | acc=0.8107 | bsr=0.392 | agg=0.46s | det_auroc=0.344 | tpr@5=0.00
+wrote 84 rows -> experiments/summary.csv
+[2026-06-22 13:30:06] === matrix fmnist-new COMPLETE ===
+[2026-06-22 13:30:06] === matrix fraud-real (rounds=40) ===
+[2026-06-22 13:30:06] START label_flip__fedavg
+[2026-06-22 13:30:13] DONE  label_flip__fedavg -> round  40 | acc=0.8689 | bsr=nan | agg=0.00s
+[2026-06-22 13:30:13] START label_flip__trimmed_mean
+[2026-06-22 13:30:20] DONE  label_flip__trimmed_mean -> round  40 | acc=0.9695 | bsr=nan | agg=0.00s
+[2026-06-22 13:30:20] START label_flip__median
+[2026-06-22 13:30:27] DONE  label_flip__median -> round  40 | acc=0.9558 | bsr=nan | agg=0.01s
+[2026-06-22 13:30:27] START label_flip__multi_krum
+[2026-06-22 13:30:36] DONE  label_flip__multi_krum -> round  40 | acc=0.9329 | bsr=nan | agg=0.03s | det_auroc=0.719 | tpr@5=0.00
+[2026-06-22 13:30:36] START label_flip__fltrust
+[2026-06-22 13:30:43] DONE  label_flip__fltrust -> round  40 | acc=0.9710 | bsr=nan | agg=0.00s | det_auroc=0.969 | tpr@5=0.00
+[2026-06-22 13:30:43] START label_flip__ecf__grad_x_input
+[2026-06-22 13:30:53] DONE  label_flip__ecf__grad_x_input -> round  40 | acc=0.8628 | bsr=nan | agg=0.06s | det_auroc=0.672 | tpr@5=0.00
+[2026-06-22 13:30:53] START label_flip__ecf__integrated_gradients
+[2026-06-22 13:31:08] DONE  label_flip__ecf__integrated_gradients -> round  40 | acc=0.8659 | bsr=nan | agg=0.19s | det_auroc=0.750 | tpr@5=0.00
+[2026-06-22 13:31:08] START label_flip__ecf__gradient_shap
+[2026-06-22 13:31:26] DONE  label_flip__ecf__gradient_shap -> round  40 | acc=0.8659 | bsr=nan | agg=0.21s | det_auroc=0.750 | tpr@5=0.00
+[2026-06-22 13:31:26] START backdoor__fedavg
+[2026-06-22 13:31:33] DONE  backdoor__fedavg -> round  40 | acc=0.9085 | bsr=1.000 | agg=0.00s
+[2026-06-22 13:31:33] START backdoor__trimmed_mean
+[2026-06-22 13:31:41] DONE  backdoor__trimmed_mean -> round  40 | acc=0.9726 | bsr=1.000 | agg=0.00s
+[2026-06-22 13:31:41] START backdoor__median
+[2026-06-22 13:31:48] DONE  backdoor__median -> round  40 | acc=0.9649 | bsr=0.000 | agg=0.01s
+[2026-06-22 13:31:48] START backdoor__multi_krum
+[2026-06-22 13:31:57] DONE  backdoor__multi_krum -> round  40 | acc=0.9665 | bsr=1.000 | agg=0.04s | det_auroc=0.469 | tpr@5=0.00
+[2026-06-22 13:31:57] START backdoor__fltrust
+[2026-06-22 13:32:05] DONE  backdoor__fltrust -> round  40 | acc=0.9710 | bsr=0.000 | agg=0.00s | det_auroc=0.969 | tpr@5=0.00
+[2026-06-22 13:32:05] START backdoor__ecf__grad_x_input
+[2026-06-22 13:32:15] DONE  backdoor__ecf__grad_x_input -> round  40 | acc=0.9024 | bsr=1.000 | agg=0.06s | det_auroc=0.188 | tpr@5=0.00
+[2026-06-22 13:32:15] START backdoor__ecf__integrated_gradients
+[2026-06-22 13:32:31] DONE  backdoor__ecf__integrated_gradients -> round  40 | acc=0.9024 | bsr=1.000 | agg=0.17s | det_auroc=0.297 | tpr@5=0.00
+[2026-06-22 13:32:31] START backdoor__ecf__gradient_shap
+[2026-06-22 13:32:48] DONE  backdoor__ecf__gradient_shap -> round  40 | acc=0.9024 | bsr=1.000 | agg=0.22s | det_auroc=0.266 | tpr@5=0.00
+[2026-06-22 13:32:48] START spurious_feature__fedavg
+[2026-06-22 13:32:55] DONE  spurious_feature__fedavg -> round  40 | acc=0.9055 | bsr=nan | agg=0.00s
+[2026-06-22 13:32:55] START spurious_feature__trimmed_mean
+[2026-06-22 13:33:02] DONE  spurious_feature__trimmed_mean -> round  40 | acc=0.9390 | bsr=nan | agg=0.00s
+[2026-06-22 13:33:02] START spurious_feature__median
+[2026-06-22 13:33:09] DONE  spurious_feature__median -> round  40 | acc=0.9588 | bsr=nan | agg=0.01s
+[2026-06-22 13:33:09] START spurious_feature__multi_krum
+[2026-06-22 13:33:18] DONE  spurious_feature__multi_krum -> round  40 | acc=0.9726 | bsr=nan | agg=0.05s | det_auroc=0.578 | tpr@5=0.00
+[2026-06-22 13:33:18] START spurious_feature__fltrust
+[2026-06-22 13:33:26] DONE  spurious_feature__fltrust -> round  40 | acc=0.9710 | bsr=nan | agg=0.00s | det_auroc=0.453 | tpr@5=0.00
+[2026-06-22 13:33:26] START spurious_feature__ecf__grad_x_input
+[2026-06-22 13:33:36] DONE  spurious_feature__ecf__grad_x_input -> round  40 | acc=0.9024 | bsr=nan | agg=0.05s | det_auroc=0.594 | tpr@5=0.00
+[2026-06-22 13:33:36] START spurious_feature__ecf__integrated_gradients
+[2026-06-22 13:33:51] DONE  spurious_feature__ecf__integrated_gradients -> round  40 | acc=0.9024 | bsr=nan | agg=0.20s | det_auroc=0.625 | tpr@5=0.25
+[2026-06-22 13:33:51] START spurious_feature__ecf__gradient_shap
+[2026-06-22 13:34:08] DONE  spurious_feature__ecf__gradient_shap -> round  40 | acc=0.9024 | bsr=nan | agg=0.33s | det_auroc=0.625 | tpr@5=0.25
+[2026-06-22 13:34:09] START constrained_backdoor__fedavg
+[2026-06-22 13:34:19] DONE  constrained_backdoor__fedavg -> round  40 | acc=0.9085 | bsr=1.000 | agg=0.00s
+[2026-06-22 13:34:19] START constrained_backdoor__trimmed_mean
+[2026-06-22 13:34:30] DONE  constrained_backdoor__trimmed_mean -> round  40 | acc=0.9710 | bsr=1.000 | agg=0.00s
+[2026-06-22 13:34:30] START constrained_backdoor__median
+[2026-06-22 13:34:40] DONE  constrained_backdoor__median -> round  40 | acc=0.9665 | bsr=0.000 | agg=0.00s
+[2026-06-22 13:34:40] START constrained_backdoor__multi_krum
+[2026-06-22 13:34:52] DONE  constrained_backdoor__multi_krum -> round  40 | acc=0.9665 | bsr=1.000 | agg=0.03s | det_auroc=0.469 | tpr@5=0.00
+[2026-06-22 13:34:52] START constrained_backdoor__fltrust
+[2026-06-22 13:35:04] DONE  constrained_backdoor__fltrust -> round  40 | acc=0.9710 | bsr=0.000 | agg=0.00s | det_auroc=0.969 | tpr@5=0.00
+[2026-06-22 13:35:04] START constrained_backdoor__ecf__grad_x_input
+[2026-06-22 13:35:17] DONE  constrained_backdoor__ecf__grad_x_input -> round  40 | acc=0.9040 | bsr=1.000 | agg=0.05s | det_auroc=0.156 | tpr@5=0.00
+[2026-06-22 13:35:17] START constrained_backdoor__ecf__integrated_gradients
+[2026-06-22 13:35:38] DONE  constrained_backdoor__ecf__integrated_gradients -> round  40 | acc=0.9040 | bsr=1.000 | agg=0.26s | det_auroc=0.297 | tpr@5=0.00
+[2026-06-22 13:35:38] START constrained_backdoor__ecf__gradient_shap
+[2026-06-22 13:36:00] DONE  constrained_backdoor__ecf__gradient_shap -> round  40 | acc=0.9040 | bsr=1.000 | agg=0.29s | det_auroc=0.297 | tpr@5=0.00
+[2026-06-22 13:36:00] START adaptive_ecf__fedavg
+[2026-06-22 13:36:11] DONE  adaptive_ecf__fedavg -> round  40 | acc=0.9055 | bsr=0.998 | agg=0.00s
+[2026-06-22 13:36:11] START adaptive_ecf__trimmed_mean
+[2026-06-22 13:36:22] DONE  adaptive_ecf__trimmed_mean -> round  40 | acc=0.9466 | bsr=1.000 | agg=0.00s
+[2026-06-22 13:36:22] START adaptive_ecf__median
+[2026-06-22 13:36:33] DONE  adaptive_ecf__median -> round  40 | acc=0.9543 | bsr=0.000 | agg=0.00s
+[2026-06-22 13:36:33] START adaptive_ecf__multi_krum
+[2026-06-22 13:36:45] DONE  adaptive_ecf__multi_krum -> round  40 | acc=0.9649 | bsr=1.000 | agg=0.03s | det_auroc=0.469 | tpr@5=0.00
+[2026-06-22 13:36:45] START adaptive_ecf__fltrust
+[2026-06-22 13:36:57] DONE  adaptive_ecf__fltrust -> round  40 | acc=0.9710 | bsr=0.000 | agg=0.00s | det_auroc=0.797 | tpr@5=0.00
+[2026-06-22 13:36:57] START adaptive_ecf__ecf__grad_x_input
+[2026-06-22 13:37:10] DONE  adaptive_ecf__ecf__grad_x_input -> round  40 | acc=0.9040 | bsr=0.998 | agg=0.05s | det_auroc=0.250 | tpr@5=0.00
+[2026-06-22 13:37:10] START adaptive_ecf__ecf__integrated_gradients
+[2026-06-22 13:37:31] DONE  adaptive_ecf__ecf__integrated_gradients -> round  40 | acc=0.9040 | bsr=0.998 | agg=0.26s | det_auroc=0.297 | tpr@5=0.00
+[2026-06-22 13:37:31] START adaptive_ecf__ecf__gradient_shap
+[2026-06-22 13:37:53] DONE  adaptive_ecf__ecf__gradient_shap -> round  40 | acc=0.9040 | bsr=0.998 | agg=0.21s | det_auroc=0.297 | tpr@5=0.00
+[2026-06-22 13:37:53] START lie__fedavg
+[2026-06-22 13:38:00] DONE  lie__fedavg -> round  40 | acc=0.8780 | bsr=nan | agg=0.00s
+[2026-06-22 13:38:00] START lie__trimmed_mean
+[2026-06-22 13:38:08] DONE  lie__trimmed_mean -> round  40 | acc=0.8948 | bsr=nan | agg=0.00s
+[2026-06-22 13:38:08] START lie__median
+[2026-06-22 13:38:15] DONE  lie__median -> round  40 | acc=0.9649 | bsr=nan | agg=0.01s
+[2026-06-22 13:38:15] START lie__multi_krum
+[2026-06-22 13:38:24] DONE  lie__multi_krum -> round  40 | acc=0.9329 | bsr=nan | agg=0.03s | det_auroc=0.875 | tpr@5=0.00
+[2026-06-22 13:38:24] START lie__fltrust
+[2026-06-22 13:38:32] DONE  lie__fltrust -> round  40 | acc=0.9710 | bsr=nan | agg=0.00s | det_auroc=0.969 | tpr@5=0.00
+[2026-06-22 13:38:32] START lie__ecf__grad_x_input
+[2026-06-22 13:38:43] DONE  lie__ecf__grad_x_input -> round  40 | acc=0.8780 | bsr=nan | agg=0.06s | det_auroc=0.500 | tpr@5=0.00
+[2026-06-22 13:38:43] START lie__ecf__integrated_gradients
+[2026-06-22 13:39:00] DONE  lie__ecf__integrated_gradients -> round  40 | acc=0.8780 | bsr=nan | agg=0.24s | det_auroc=0.438 | tpr@5=0.00
+[2026-06-22 13:39:00] START lie__ecf__gradient_shap
+[2026-06-22 13:39:17] DONE  lie__ecf__gradient_shap -> round  40 | acc=0.8780 | bsr=nan | agg=0.22s | det_auroc=0.438 | tpr@5=0.00
+[2026-06-22 13:39:17] START min_max__fedavg
+[2026-06-22 13:39:27] DONE  min_max__fedavg -> round  40 | acc=0.8476 | bsr=nan | agg=0.00s
+[2026-06-22 13:39:27] START min_max__trimmed_mean
+[2026-06-22 13:39:38] DONE  min_max__trimmed_mean -> round  40 | acc=0.9024 | bsr=nan | agg=0.00s
+[2026-06-22 13:39:38] START min_max__median
+[2026-06-22 13:39:48] DONE  min_max__median -> round  40 | acc=0.9146 | bsr=nan | agg=0.00s
+[2026-06-22 13:39:48] START min_max__multi_krum
+[2026-06-22 13:40:00] DONE  min_max__multi_krum -> round  40 | acc=0.9238 | bsr=nan | agg=0.03s | det_auroc=1.000 | tpr@5=1.00
+[2026-06-22 13:40:00] START min_max__fltrust
+[2026-06-22 13:40:12] DONE  min_max__fltrust -> round  40 | acc=0.9710 | bsr=nan | agg=0.00s | det_auroc=0.969 | tpr@5=0.00
+[2026-06-22 13:40:12] START min_max__ecf__grad_x_input
+[2026-06-22 13:40:25] DONE  min_max__ecf__grad_x_input -> round  40 | acc=0.8476 | bsr=nan | agg=0.08s | det_auroc=0.938 | tpr@5=0.00
+[2026-06-22 13:40:25] START min_max__ecf__integrated_gradients
+[2026-06-22 13:40:46] DONE  min_max__ecf__integrated_gradients -> round  40 | acc=0.8476 | bsr=nan | agg=0.22s | det_auroc=0.938 | tpr@5=0.00
+[2026-06-22 13:40:46] START min_max__ecf__gradient_shap
+[2026-06-22 13:41:08] DONE  min_max__ecf__gradient_shap -> round  40 | acc=0.8476 | bsr=nan | agg=0.28s | det_auroc=0.938 | tpr@5=0.00
+wrote 140 rows -> experiments/summary.csv
+[2026-06-22 13:41:08] === matrix fraud-real COMPLETE ===
+[2026-06-22 13:41:08] === matrix imdb-real (rounds=20) ===
+[2026-06-22 13:41:08] START label_flip__fedavg
+[2026-06-22 13:41:39] DONE  label_flip__fedavg -> round  20 | acc=0.6478 | bsr=nan | agg=0.06s
+[2026-06-22 13:41:39] START label_flip__trimmed_mean
+[2026-06-22 13:42:15] DONE  label_flip__trimmed_mean -> round  20 | acc=0.5111 | bsr=nan | agg=0.41s
+[2026-06-22 13:42:15] START label_flip__median
+[2026-06-22 13:42:54] DONE  label_flip__median -> round  20 | acc=0.5147 | bsr=nan | agg=0.47s
+[2026-06-22 13:42:54] START label_flip__multi_krum
+[2026-06-22 13:44:30] DONE  label_flip__multi_krum -> round  20 | acc=0.5008 | bsr=nan | agg=3.40s | det_auroc=0.359 | tpr@5=0.00
+[2026-06-22 13:44:30] START label_flip__fltrust
+[2026-06-22 13:45:04] DONE  label_flip__fltrust -> round  20 | acc=0.5131 | bsr=nan | agg=0.13s | det_auroc=0.781 | tpr@5=0.00
+[2026-06-22 13:45:04] START label_flip__ecf__grad_x_input
+[2026-06-22 13:45:40] DONE  label_flip__ecf__grad_x_input -> round  20 | acc=0.5403 | bsr=nan | agg=0.22s | det_auroc=0.344 | tpr@5=0.00
+[2026-06-22 13:45:40] START label_flip__ecf__integrated_gradients
+[2026-06-22 13:46:18] DONE  label_flip__ecf__integrated_gradients -> round  20 | acc=0.5408 | bsr=nan | agg=0.37s | det_auroc=0.312 | tpr@5=0.00
+[2026-06-22 13:46:18] START label_flip__ecf__gradient_shap
+[2026-06-22 13:46:56] DONE  label_flip__ecf__gradient_shap -> round  20 | acc=0.5405 | bsr=nan | agg=0.38s | det_auroc=0.328 | tpr@5=0.00
+[2026-06-22 13:46:56] START backdoor__fedavg
+[2026-06-22 13:47:28] DONE  backdoor__fedavg -> round  20 | acc=0.5509 | bsr=0.033 | agg=0.05s
+[2026-06-22 13:47:28] START backdoor__trimmed_mean
+[2026-06-22 13:48:06] DONE  backdoor__trimmed_mean -> round  20 | acc=0.6433 | bsr=0.457 | agg=0.41s
+[2026-06-22 13:48:06] START backdoor__median
+[2026-06-22 13:48:45] DONE  backdoor__median -> round  20 | acc=0.6063 | bsr=0.703 | agg=0.46s
+[2026-06-22 13:48:45] START backdoor__multi_krum
+[2026-06-22 13:50:22] DONE  backdoor__multi_krum -> round  20 | acc=0.6115 | bsr=0.158 | agg=3.37s | det_auroc=0.547 | tpr@5=0.00
+[2026-06-22 13:50:22] START backdoor__fltrust
+[2026-06-22 13:50:56] DONE  backdoor__fltrust -> round  20 | acc=0.5041 | bsr=0.992 | agg=0.13s | det_auroc=0.219 | tpr@5=0.00
+[2026-06-22 13:50:56] START backdoor__ecf__grad_x_input
+[2026-06-22 13:51:32] DONE  backdoor__ecf__grad_x_input -> round  20 | acc=0.5520 | bsr=0.843 | agg=0.25s | det_auroc=0.938 | tpr@5=0.25
+[2026-06-22 13:51:32] START backdoor__ecf__integrated_gradients
+[2026-06-22 13:52:10] DONE  backdoor__ecf__integrated_gradients -> round  20 | acc=0.5532 | bsr=0.838 | agg=0.39s | det_auroc=0.938 | tpr@5=0.75
+[2026-06-22 13:52:10] START backdoor__ecf__gradient_shap
+[2026-06-22 13:52:49] DONE  backdoor__ecf__gradient_shap -> round  20 | acc=0.5532 | bsr=0.838 | agg=0.39s | det_auroc=0.938 | tpr@5=0.50
+[2026-06-22 13:52:49] START spurious_feature__fedavg
+[2026-06-22 13:53:20] DONE  spurious_feature__fedavg -> round  20 | acc=0.5046 | bsr=nan | agg=0.05s
+[2026-06-22 13:53:20] START spurious_feature__trimmed_mean
+[2026-06-22 13:53:57] DONE  spurious_feature__trimmed_mean -> round  20 | acc=0.6469 | bsr=nan | agg=0.42s
+[2026-06-22 13:53:57] START spurious_feature__median
+[2026-06-22 13:54:36] DONE  spurious_feature__median -> round  20 | acc=0.6304 | bsr=nan | agg=0.45s
+[2026-06-22 13:54:36] START spurious_feature__multi_krum
+[2026-06-22 13:56:11] DONE  spurious_feature__multi_krum -> round  20 | acc=0.5983 | bsr=nan | agg=3.42s | det_auroc=0.406 | tpr@5=0.00
+[2026-06-22 13:56:11] START spurious_feature__fltrust
+[2026-06-22 13:56:45] DONE  spurious_feature__fltrust -> round  20 | acc=0.5169 | bsr=nan | agg=0.13s | det_auroc=0.062 | tpr@5=0.00
+[2026-06-22 13:56:45] START spurious_feature__ecf__grad_x_input
+[2026-06-22 13:57:21] DONE  spurious_feature__ecf__grad_x_input -> round  20 | acc=0.5447 | bsr=nan | agg=0.22s | det_auroc=0.703 | tpr@5=0.25
+[2026-06-22 13:57:21] START spurious_feature__ecf__integrated_gradients
+[2026-06-22 13:57:59] DONE  spurious_feature__ecf__integrated_gradients -> round  20 | acc=0.5450 | bsr=nan | agg=0.36s | det_auroc=0.719 | tpr@5=0.50
+[2026-06-22 13:57:59] START spurious_feature__ecf__gradient_shap
+[2026-06-22 13:58:38] DONE  spurious_feature__ecf__gradient_shap -> round  20 | acc=0.5450 | bsr=nan | agg=0.42s | det_auroc=0.703 | tpr@5=0.50
+[2026-06-22 13:58:38] START constrained_backdoor__fedavg
+[2026-06-22 14:02:04] DONE  constrained_backdoor__fedavg -> round  20 | acc=0.5509 | bsr=0.033 | agg=0.05s
+[2026-06-22 14:02:04] START constrained_backdoor__trimmed_mean
+[2026-06-22 14:05:37] DONE  constrained_backdoor__trimmed_mean -> round  20 | acc=0.6433 | bsr=0.457 | agg=0.39s
+[2026-06-22 14:05:37] START constrained_backdoor__median
+[2026-06-22 14:09:12] DONE  constrained_backdoor__median -> round  20 | acc=0.6063 | bsr=0.703 | agg=0.44s
+[2026-06-22 14:09:12] START constrained_backdoor__multi_krum
+[2026-06-22 14:13:44] DONE  constrained_backdoor__multi_krum -> round  20 | acc=0.6115 | bsr=0.158 | agg=3.37s | det_auroc=0.547 | tpr@5=0.00
+[2026-06-22 14:13:44] START constrained_backdoor__fltrust
+[2026-06-22 14:17:13] DONE  constrained_backdoor__fltrust -> round  20 | acc=0.5041 | bsr=0.992 | agg=0.15s | det_auroc=0.219 | tpr@5=0.00
+[2026-06-22 14:17:13] START constrained_backdoor__ecf__grad_x_input
+[2026-06-22 14:20:40] DONE  constrained_backdoor__ecf__grad_x_input -> round  20 | acc=0.5520 | bsr=0.843 | agg=0.25s | det_auroc=0.938 | tpr@5=0.25
+[2026-06-22 14:20:40] START constrained_backdoor__ecf__integrated_gradients
+[2026-06-22 14:24:10] DONE  constrained_backdoor__ecf__integrated_gradients -> round  20 | acc=0.5532 | bsr=0.838 | agg=0.36s | det_auroc=0.938 | tpr@5=0.75
+[2026-06-22 14:24:10] START constrained_backdoor__ecf__gradient_shap
+[2026-06-22 14:27:41] DONE  constrained_backdoor__ecf__gradient_shap -> round  20 | acc=0.5532 | bsr=0.838 | agg=0.42s | det_auroc=0.938 | tpr@5=0.50
+[2026-06-22 14:27:41] START adaptive_ecf__fedavg
+[2026-06-22 14:31:14] DONE  adaptive_ecf__fedavg -> round  20 | acc=0.5582 | bsr=0.860 | agg=0.05s
+[2026-06-22 14:31:14] START adaptive_ecf__trimmed_mean
+[2026-06-22 14:35:21] DONE  adaptive_ecf__trimmed_mean -> round  20 | acc=0.6310 | bsr=0.567 | agg=0.40s
+[2026-06-22 14:35:21] START adaptive_ecf__median
+[2026-06-22 14:39:12] DONE  adaptive_ecf__median -> round  20 | acc=0.6452 | bsr=0.449 | agg=0.47s
+[2026-06-22 14:39:12] START adaptive_ecf__multi_krum
+[2026-06-22 14:43:51] DONE  adaptive_ecf__multi_krum -> round  20 | acc=0.6282 | bsr=0.202 | agg=3.46s | det_auroc=0.594 | tpr@5=0.00
+[2026-06-22 14:43:51] START adaptive_ecf__fltrust
+[2026-06-22 14:47:37] DONE  adaptive_ecf__fltrust -> round  20 | acc=0.5621 | bsr=0.817 | agg=0.15s | det_auroc=0.188 | tpr@5=0.00
+[2026-06-22 14:47:37] START adaptive_ecf__ecf__grad_x_input
+[2026-06-22 14:51:23] DONE  adaptive_ecf__ecf__grad_x_input -> round  20 | acc=0.6068 | bsr=0.561 | agg=0.21s | det_auroc=0.250 | tpr@5=0.00
+[2026-06-22 14:51:23] START adaptive_ecf__ecf__integrated_gradients
+[2026-06-22 14:55:11] DONE  adaptive_ecf__ecf__integrated_gradients -> round  20 | acc=0.6069 | bsr=0.559 | agg=0.34s | det_auroc=0.312 | tpr@5=0.00
+[2026-06-22 14:55:11] START adaptive_ecf__ecf__gradient_shap
+[2026-06-22 14:58:59] DONE  adaptive_ecf__ecf__gradient_shap -> round  20 | acc=0.6068 | bsr=0.559 | agg=0.35s | det_auroc=0.312 | tpr@5=0.00
+[2026-06-22 14:58:59] START lie__fedavg
+[2026-06-22 14:59:51] DONE  lie__fedavg -> round  20 | acc=0.6010 | bsr=nan | agg=0.05s
+[2026-06-22 14:59:51] START lie__trimmed_mean
+[2026-06-22 15:00:50] DONE  lie__trimmed_mean -> round  20 | acc=0.6098 | bsr=nan | agg=0.38s
+[2026-06-22 15:00:50] START lie__median
+[2026-06-22 15:01:50] DONE  lie__median -> round  20 | acc=0.6132 | bsr=nan | agg=0.43s
+[2026-06-22 15:01:50] START lie__multi_krum
+[2026-06-22 15:03:49] DONE  lie__multi_krum -> round  20 | acc=0.5582 | bsr=nan | agg=3.39s | det_auroc=0.812 | tpr@5=0.00
+[2026-06-22 15:03:49] START lie__fltrust
+[2026-06-22 15:04:45] DONE  lie__fltrust -> round  20 | acc=0.5196 | bsr=nan | agg=0.13s | det_auroc=0.781 | tpr@5=0.00
+[2026-06-22 15:04:45] START lie__ecf__grad_x_input
+[2026-06-22 15:05:39] DONE  lie__ecf__grad_x_input -> round  20 | acc=0.6076 | bsr=nan | agg=0.21s | det_auroc=0.500 | tpr@5=0.00
+[2026-06-22 15:05:39] START lie__ecf__integrated_gradients
+[2026-06-22 15:06:39] DONE  lie__ecf__integrated_gradients -> round  20 | acc=0.6090 | bsr=nan | agg=0.39s | det_auroc=0.250 | tpr@5=0.00
+[2026-06-22 15:06:39] START lie__ecf__gradient_shap
+[2026-06-22 15:07:40] DONE  lie__ecf__gradient_shap -> round  20 | acc=0.6091 | bsr=nan | agg=0.43s | det_auroc=0.250 | tpr@5=0.00
+[2026-06-22 15:07:40] START min_max__fedavg
+[2026-06-22 15:11:09] DONE  min_max__fedavg -> round  20 | acc=0.5000 | bsr=nan | agg=0.05s
+[2026-06-22 15:11:09] START min_max__trimmed_mean
+[2026-06-22 15:14:47] DONE  min_max__trimmed_mean -> round  20 | acc=0.5386 | bsr=nan | agg=0.41s
+[2026-06-22 15:14:47] START min_max__median
+[2026-06-22 15:18:28] DONE  min_max__median -> round  20 | acc=0.5568 | bsr=nan | agg=0.47s
+[2026-06-22 15:18:28] START min_max__multi_krum
+[2026-06-22 15:23:15] DONE  min_max__multi_krum -> round  20 | acc=0.6325 | bsr=nan | agg=3.55s | det_auroc=1.000 | tpr@5=1.00
+[2026-06-22 15:23:15] START min_max__fltrust
+[2026-06-22 15:26:56] DONE  min_max__fltrust -> round  20 | acc=0.5155 | bsr=nan | agg=0.14s | det_auroc=0.562 | tpr@5=0.00
+[2026-06-22 15:26:56] START min_max__ecf__grad_x_input
+[2026-06-22 15:30:35] DONE  min_max__ecf__grad_x_input -> round  20 | acc=0.5651 | bsr=nan | agg=0.24s | det_auroc=1.000 | tpr@5=1.00
+[2026-06-22 15:30:35] START min_max__ecf__integrated_gradients
+[2026-06-22 15:34:16] DONE  min_max__ecf__integrated_gradients -> round  20 | acc=0.5652 | bsr=nan | agg=0.35s | det_auroc=1.000 | tpr@5=1.00
+[2026-06-22 15:34:16] START min_max__ecf__gradient_shap
+[2026-06-22 15:37:47] DONE  min_max__ecf__gradient_shap -> round  20 | acc=0.5648 | bsr=nan | agg=0.42s | det_auroc=1.000 | tpr@5=1.00
+wrote 201 rows -> experiments/summary.csv
+[2026-06-22 15:37:47] === matrix imdb-real COMPLETE ===
+wrote 201 rows -> experiments/summary.csv
+[2026-06-22 15:37:47] ALL MATRICES COMPLETE -> experiments/summary.csv

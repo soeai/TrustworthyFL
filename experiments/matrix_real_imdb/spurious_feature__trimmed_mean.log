@@ -1,0 +1,21 @@
+device=cuda dataset=imdb(real) clients=20 malicious=4 defense=trimmed_mean attack=spurious_feature
+round   1 | acc=0.5000 | bsr=nan | agg=0.41s
+round   2 | acc=0.5011 | bsr=nan | agg=0.41s
+round   3 | acc=0.5042 | bsr=nan | agg=0.40s
+round   4 | acc=0.5186 | bsr=nan | agg=0.40s
+round   5 | acc=0.5482 | bsr=nan | agg=0.39s
+round   6 | acc=0.6020 | bsr=nan | agg=0.41s
+round   7 | acc=0.5964 | bsr=nan | agg=0.41s
+round   8 | acc=0.6104 | bsr=nan | agg=0.41s
+round   9 | acc=0.6094 | bsr=nan | agg=0.39s
+round  10 | acc=0.6218 | bsr=nan | agg=0.42s
+round  11 | acc=0.6247 | bsr=nan | agg=0.40s
+round  12 | acc=0.6245 | bsr=nan | agg=0.41s
+round  13 | acc=0.6308 | bsr=nan | agg=0.39s
+round  14 | acc=0.6331 | bsr=nan | agg=0.40s
+round  15 | acc=0.6336 | bsr=nan | agg=0.38s
+round  16 | acc=0.6356 | bsr=nan | agg=0.42s
+round  17 | acc=0.6414 | bsr=nan | agg=0.40s
+round  18 | acc=0.6407 | bsr=nan | agg=0.43s
+round  19 | acc=0.6456 | bsr=nan | agg=0.41s
+round  20 | acc=0.6469 | bsr=nan | agg=0.42s

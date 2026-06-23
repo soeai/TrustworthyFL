@@ -1,0 +1,21 @@
+device=cuda dataset=imdb(real) clients=20 malicious=4 defense=trimmed_mean attack=adaptive_ecf
+round   1 | acc=0.5110 | bsr=0.025 | agg=0.41s
+round   2 | acc=0.5602 | bsr=0.767 | agg=0.40s
+round   3 | acc=0.5772 | bsr=0.190 | agg=0.39s
+round   4 | acc=0.6048 | bsr=0.430 | agg=0.40s
+round   5 | acc=0.6078 | bsr=0.384 | agg=0.39s
+round   6 | acc=0.5903 | bsr=0.190 | agg=0.40s
+round   7 | acc=0.6037 | bsr=0.616 | agg=0.39s
+round   8 | acc=0.5943 | bsr=0.178 | agg=0.39s
+round   9 | acc=0.5754 | bsr=0.786 | agg=0.40s
+round  10 | acc=0.6173 | bsr=0.268 | agg=0.39s
+round  11 | acc=0.6198 | bsr=0.277 | agg=0.39s
+round  12 | acc=0.6286 | bsr=0.348 | agg=0.40s
+round  13 | acc=0.6210 | bsr=0.249 | agg=0.39s
+round  14 | acc=0.6262 | bsr=0.560 | agg=0.39s
+round  15 | acc=0.6172 | bsr=0.206 | agg=0.39s
+round  16 | acc=0.6169 | bsr=0.631 | agg=0.40s
+round  17 | acc=0.6208 | bsr=0.200 | agg=0.39s
+round  18 | acc=0.6207 | bsr=0.624 | agg=0.40s
+round  19 | acc=0.6170 | bsr=0.177 | agg=0.39s
+round  20 | acc=0.6310 | bsr=0.567 | agg=0.40s

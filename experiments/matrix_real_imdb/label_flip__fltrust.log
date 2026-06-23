@@ -1,0 +1,21 @@
+device=cuda dataset=imdb(real) clients=20 malicious=4 defense=fltrust attack=label_flip
+round   1 | acc=0.5000 | bsr=nan | agg=0.17s | det_auroc=0.719 | tpr@5=0.00
+round   2 | acc=0.5009 | bsr=nan | agg=0.19s | det_auroc=0.625 | tpr@5=0.00
+round   3 | acc=0.5000 | bsr=nan | agg=0.13s | det_auroc=0.781 | tpr@5=0.00
+round   4 | acc=0.5000 | bsr=nan | agg=0.13s | det_auroc=0.781 | tpr@5=0.00
+round   5 | acc=0.5017 | bsr=nan | agg=0.13s | det_auroc=0.672 | tpr@5=0.00
+round   6 | acc=0.5007 | bsr=nan | agg=0.13s | det_auroc=0.781 | tpr@5=0.00
+round   7 | acc=0.5000 | bsr=nan | agg=0.13s | det_auroc=0.781 | tpr@5=0.00
+round   8 | acc=0.5022 | bsr=nan | agg=0.14s | det_auroc=0.672 | tpr@5=0.00
+round   9 | acc=0.5000 | bsr=nan | agg=0.13s | det_auroc=0.781 | tpr@5=0.00
+round  10 | acc=0.5273 | bsr=nan | agg=0.13s | det_auroc=0.547 | tpr@5=0.00
+round  11 | acc=0.5014 | bsr=nan | agg=0.13s | det_auroc=0.781 | tpr@5=0.00
+round  12 | acc=0.5031 | bsr=nan | agg=0.13s | det_auroc=0.922 | tpr@5=0.00
+round  13 | acc=0.5438 | bsr=nan | agg=0.13s | det_auroc=0.609 | tpr@5=0.00
+round  14 | acc=0.5027 | bsr=nan | agg=0.13s | det_auroc=0.750 | tpr@5=0.00
+round  15 | acc=0.5606 | bsr=nan | agg=0.13s | det_auroc=0.594 | tpr@5=0.00
+round  16 | acc=0.5100 | bsr=nan | agg=0.13s | det_auroc=0.781 | tpr@5=0.00
+round  17 | acc=0.5760 | bsr=nan | agg=0.13s | det_auroc=0.594 | tpr@5=0.00
+round  18 | acc=0.5079 | bsr=nan | agg=0.13s | det_auroc=0.750 | tpr@5=0.00
+round  19 | acc=0.5789 | bsr=nan | agg=0.13s | det_auroc=0.516 | tpr@5=0.00
+round  20 | acc=0.5131 | bsr=nan | agg=0.13s | det_auroc=0.781 | tpr@5=0.00
