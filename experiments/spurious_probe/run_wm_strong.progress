@@ -1,0 +1,4 @@
+spurious__wm_v05_s4 (val=0.5,size=4) -> round  60 | acc=0.7005 | bsr=nan | agg=0.16s | det_auroc=0.688 | tpr@5=0.25
+spurious__wm_v10_s4 (val=1.0,size=4) -> round  60 | acc=0.6995 | bsr=nan | agg=0.14s | det_auroc=0.703 | tpr@5=0.00
+spurious__wm_v10_s6 (val=1.0,size=6) -> round  60 | acc=0.7017 | bsr=nan | agg=0.15s | det_auroc=0.812 | tpr@5=0.25
+ALL DONE

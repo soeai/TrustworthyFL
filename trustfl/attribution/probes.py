@@ -25,7 +25,8 @@ from typing import Optional
 import torch
 import torch.nn.functional as F
 
-from ..attacks.data_attacks import add_pixel_trigger, tabular_trigger, text_trigger
+from ..attacks.data_attacks import (add_pixel_trigger, add_watermark,
+                                    tabular_trigger, text_trigger)
 from .operators import set_params
 
 
@@ -34,6 +35,11 @@ from .operators import set_params
 # --------------------------------------------------------------------------- #
 def _oracle(probe_x: torch.Tensor, modality: str, kw: dict) -> torch.Tensor:
     if modality == "image":
+        # kind="watermark" stamps the faint spurious mark (matches spurious_feature);
+        # default kind="trigger" stamps the BadNets pixel trigger (matches backdoor).
+        if kw.get("kind", "trigger") == "watermark":
+            return add_watermark(probe_x, size=int(kw.get("wm_size", 4)),
+                                 value=float(kw.get("wm_value", 0.25)))
         return add_pixel_trigger(probe_x, size=int(kw.get("trigger_size", 3)),
                                  value=float(kw.get("image_value", 1.0)))
     if modality == "tabular":

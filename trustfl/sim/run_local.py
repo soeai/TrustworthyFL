@@ -111,7 +111,8 @@ def run(cfg: dict):
             device=dev, target_label=tgt,
             oracle_kw={"trigger_size": cfg.get("trigger_size", 3), "image_value": 1.0,
                        "trigger_feature": tfeat, "trigger_value": tval,
-                       "trigger_token": ttok, "trigger_pos": tpos},
+                       "trigger_token": ttok, "trigger_pos": tpos,
+                       **pcfg.get("oracle", {})},   # e.g. {kind: watermark} for spurious
             candidate_kw=pcfg.get("candidate", {}),
             perturb_kw=pcfg.get("perturb", {}))
 
