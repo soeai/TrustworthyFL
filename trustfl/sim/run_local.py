@@ -22,6 +22,8 @@ from ..models.build import build_model
 from ..clients.trainer import local_train, evaluate, backdoor_success_rate
 from ..attribution.operators import (set_params, get_params, make_attribution_fn,
                                      server_reference_update)
+from ..attribution.probes import build_probe
+from ..attribution.backdoorability import make_backdoorability_fn
 from ..attacks.data_attacks import (label_flip, poison_spurious_feature,
                                     tabular_trigger, poison_tabular_backdoor,
                                     poison_tabular_spurious, text_trigger,
@@ -86,10 +88,43 @@ def run(cfg: dict):
     defense = build_defense(cfg["defense"], num_malicious=cfg["num_malicious"], **cfg.get("defense_kw", {}))
     global_params: NDArrays = get_params(model)
 
+    # --- build the ECF probe: clean | oracle | candidate | perturb (configurable).
+    # Activating the probe (oracle/candidate/perturb) lets dormant attacks surface
+    # in explanation space. `oracle` is a diagnostic upper bound (knows the
+    # trigger); `candidate` reverse-engineers one from the global model; `perturb`
+    # is attack-agnostic noise. Back-compat: the old flat `probe_mode` maps to oracle.
+    pcfg = dict(cfg.get("probe", {}))
+    if not pcfg and cfg.get("probe_mode", "clean") != "clean":
+        pcfg = {"strategy": "oracle", "mode": cfg["probe_mode"]}
+    probe_strategy = pcfg.get("strategy", "clean")
+    # candidate.refresh = K: re-recover the trigger from the LIVE global every K
+    # rounds (0 = build once). Fixes the "recovered from untrained init + frozen"
+    # failure -- the recovered trigger tracks the converging model.
+    probe_refresh = int(pcfg.get("candidate", {}).get("refresh", 0))
+    base_probe_x = probe_x
+
+    def _make_probe(gp):
+        return build_probe(
+            base_probe_x, strategy=probe_strategy, mode=pcfg.get("mode", "triggered"),
+            modality=meta.modality, num_classes=meta.num_classes,
+            model=build_model(cfg["model"], **mkw), global_params=gp,
+            device=dev, target_label=tgt,
+            oracle_kw={"trigger_size": cfg.get("trigger_size", 3), "image_value": 1.0,
+                       "trigger_feature": tfeat, "trigger_value": tval,
+                       "trigger_token": ttok, "trigger_pos": tpos},
+            candidate_kw=pcfg.get("candidate", {}),
+            perturb_kw=pcfg.get("perturb", {}))
+
+    if probe_strategy != "clean":
+        probe_x = _make_probe(global_params)
+
     print(f"device={dev} dataset={meta.name}({meta.source}) clients={cfg['num_clients']} "
           f"malicious={len(malicious)} defense={defense.name} attack={cfg['attack']}")
 
     for rnd in range(1, cfg["rounds"] + 1):
+        # (A) re-recover the candidate probe from the live global every K rounds
+        if probe_strategy == "candidate" and probe_refresh > 0 and rnd % probe_refresh == 1 and rnd > 1:
+            probe_x = _make_probe(global_params)
         sel = rng.choice(cfg["num_clients"], size=cfg["clients_per_round"], replace=False)
         benign_updates, mal_ids, all_meta = [], [], []
 
@@ -173,13 +208,22 @@ def run(cfg: dict):
                 build_model(cfg["model"], **mkw), root_loader, global_params,
                 epochs=1, lr=cfg["lr"], device=dev)
         if defense.name == "ecf":
-            ctx.attribution_fn = make_attribution_fn(
-                build_model(cfg["model"], **mkw), probe_x, global_params,
-                device=dev, method=cfg.get("attribution", "grad_x_input"),
-                ig_steps=cfg.get("ig_steps", 16),
-                gshap_samples=cfg.get("gshap_samples", 16),
-                gshap_stdev=cfg.get("gshap_stdev", 0.1),
-                gshap_seed=cfg.get("seed", 0), modality=meta.modality)
+            ecf_score = cfg.get("defense_kw", {}).get("score", "consistency")
+            if ecf_score == "backdoorability":
+                bd = cfg.get("backdoorability", {})
+                ctx.score_fn = make_backdoorability_fn(
+                    build_model(cfg["model"], **mkw), base_probe_x, tgt,
+                    meta.num_classes, device=dev, modality=meta.modality,
+                    steps=bd.get("steps", 25), lr=bd.get("lr", 0.1),
+                    lam=bd.get("lambda", 0.01), scan_targets=bd.get("scan_targets", False))
+            else:
+                ctx.attribution_fn = make_attribution_fn(
+                    build_model(cfg["model"], **mkw), probe_x, global_params,
+                    device=dev, method=cfg.get("attribution", "grad_x_input"),
+                    ig_steps=cfg.get("ig_steps", 16),
+                    gshap_samples=cfg.get("gshap_samples", 16),
+                    gshap_stdev=cfg.get("gshap_stdev", 0.1),
+                    gshap_seed=cfg.get("seed", 0), modality=meta.modality)
 
         t0 = time.time()
         global_params = defense.aggregate(updates, ctx)

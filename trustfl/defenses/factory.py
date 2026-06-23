@@ -17,7 +17,9 @@ def build_defense(name: str, **kw):
         "fltrust": lambda: FLTrust(),
         "ecf": lambda: ECF(tau=kw.get("tau", 0.5), mode=kw.get("mode", "soft"),
                            consensus=kw.get("consensus", "geomedian"),
-                           beta=kw.get("beta", 2.0), norm_gate=kw.get("norm_gate", True)),
+                           beta=kw.get("beta", 2.0), norm_gate=kw.get("norm_gate", True),
+                           kappa=kw.get("kappa", 2.5), num_malicious=kw.get("num_malicious"),
+                           score=kw.get("score", "consistency")),
     }
     if name not in table:
         raise ValueError(f"unknown defense '{name}'")

@@ -15,7 +15,7 @@ import numpy as np
 
 from .base import Aggregator, ClientUpdate, AggContext
 from ..core.params import NDArrays, add, l2, clip_to_norm, weighted_sum
-from ..attribution.divergence import explanation_consistency
+from ..attribution.divergence import explanation_consistency, trust_weights
 
 
 class ECF(Aggregator):
@@ -23,16 +23,22 @@ class ECF(Aggregator):
 
     def __init__(self, tau: float = 0.5, mode: str = "soft",
                  consensus: str = "geomedian", beta: float = 2.0,
-                 norm_gate: bool = True):
+                 norm_gate: bool = True, kappa: float = 2.5,
+                 num_malicious: int | None = None, score: str = "consistency"):
         self.tau = tau
         self.mode = mode
         self.consensus = consensus
         self.beta = beta
         self.norm_gate = norm_gate
+        self.kappa = kappa                 # confidence gate for mode="hard_gate"
+        self.num_malicious = num_malicious  # cap on hard-rejected clients
+        self.score = score                 # "consistency" | "backdoorability"
 
     def aggregate(self, updates: List[ClientUpdate], ctx: AggContext) -> NDArrays:
-        if ctx.attribution_fn is None:
-            raise ValueError("ECF requires ctx.attribution_fn")
+        if self.score == "consistency" and ctx.attribution_fn is None:
+            raise ValueError("ECF score='consistency' requires ctx.attribution_fn")
+        if self.score == "backdoorability" and ctx.score_fn is None:
+            raise ValueError("ECF score='backdoorability' requires ctx.score_fn")
 
         deltas = [u.delta for u in updates]
 
@@ -44,13 +50,18 @@ class ECF(Aggregator):
         # client model params = global + (gated) delta
         client_params = [add(ctx.global_params, d) for d in deltas]
 
-        # signatures: [n, m, d]  (one normalized attribution per probe sample)
-        sig = ctx.attribution_fn(client_params)
-
-        # explanation-space consistency -> trust weights
-        w, div = explanation_consistency(
-            sig, tau=self.tau, mode=self.mode,
-            consensus=self.consensus, beta=self.beta)
+        if self.score == "backdoorability":
+            # per-client suspicion (higher=worse) used directly as the "divergence"
+            div = ctx.score_fn(client_params)
+            w = trust_weights(div, tau=self.tau, mode=self.mode, beta=self.beta,
+                              kappa=self.kappa, max_drop=self.num_malicious)
+        else:
+            # signatures: [n, m, d]  (one normalized attribution per probe sample)
+            sig = ctx.attribution_fn(client_params)
+            w, div = explanation_consistency(
+                sig, tau=self.tau, mode=self.mode,
+                consensus=self.consensus, beta=self.beta,
+                kappa=self.kappa, max_drop=self.num_malicious)
 
         # combine with sample sizes, then aggregate the (gated) deltas
         n = np.array([u.num_examples for u in updates], dtype=np.float64)

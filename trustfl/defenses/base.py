@@ -32,6 +32,9 @@ class AggContext:
     global_params: NDArrays
     attribution_fn: Optional[Callable[[List[NDArrays]], np.ndarray]] = None
     server_update: Optional[NDArrays] = None
+    # per-client suspicion scores (higher = more suspicious), e.g. backdoorability;
+    # an alternative ECF signal to attribution consistency.
+    score_fn: Optional[Callable[[List[NDArrays]], np.ndarray]] = None
     extras: dict = field(default_factory=dict)
 
 

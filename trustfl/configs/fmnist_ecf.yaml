@@ -21,12 +21,34 @@ trigger_size: 3
 defense: ecf             # fedavg | trimmed_mean | median | multi_krum | fltrust | ecf
 defense_kw:
   tau: 0.5
-  mode: soft             # soft | hard
+  mode: soft             # soft | hard | hard_gate
   consensus: geomedian   # geomedian | coordmedian | mean
   norm_gate: true
+  kappa: 2.5             # hard_gate: robust z-score gate; drop clients with z>kappa
+                         #            (capped at num_malicious) -> reject only when
+                         #            detection confidence is large, else stay soft
 
 # ECF attribution
 attribution: grad_x_input   # grad_x_input | integrated_gradients
 ig_steps: 16
 probe_size: 64
 root_size: 100
+
+# ECF probe construction. strategy: clean (untouched, blind to dormant attacks) |
+# oracle (stamp the KNOWN trigger -- diagnostic upper bound) | candidate
+# (reverse-engineer a trigger from the global model, Neural-Cleanse-lite --
+# realistic) | perturb (generic attack-agnostic noise/patch). mode: triggered
+# (replace clean probe) | both (concatenate clean + activated probe).
+probe:
+  strategy: clean        # clean | oracle | candidate | perturb
+  mode: triggered        # triggered | both
+  candidate:             # used when strategy=candidate
+    steps: 150
+    lr: 0.1
+    lambda: 0.01         # L1 sparsity on the recovered mask/delta
+    scan_targets: false  # true = scan all classes, pick the smallest-mask (true NC)
+  perturb:               # used when strategy=perturb
+    kind: patch          # patch | noise
+    strength: 1.0
+    size: 3              # patch side (image)
+    seed: 0

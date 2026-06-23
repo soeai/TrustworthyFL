@@ -48,11 +48,18 @@ def cosine_divergence(sig: np.ndarray, consensus: str = "geomedian",
 
 
 def trust_weights(div: np.ndarray, tau: float = 0.5, mode: str = "soft",
-                  beta: float = 2.0) -> np.ndarray:
+                  beta: float = 2.0, kappa: float = 2.5,
+                  max_drop: int | None = None) -> np.ndarray:
     """Map divergences to non-negative, normalized trust weights.
 
     ``soft``: w = ReLU(1 - d/tau).  ``hard``: drop clients with
-    d > median + beta * MAD, then uniform-average the rest.
+    d > median + beta * MAD, then uniform-average the rest.  ``hard_gate``:
+    hard-reject (w=0) only the *confidently* suspicious clients -- those whose
+    robust z-score of divergence exceeds ``kappa`` -- and soft-weight the rest;
+    at most ``max_drop`` clients are dropped (the known malicious budget) so a
+    noisy MAD cannot prune the honest majority. When no client clears the
+    confidence gate it degrades to plain ``soft`` (bottleneck-B fix: act hard
+    only when detection probability is large, otherwise stay gentle).
     """
     div = np.asarray(div, dtype=np.float64)
     if mode == "soft":
@@ -62,6 +69,19 @@ def trust_weights(div: np.ndarray, tau: float = 0.5, mode: str = "soft",
         mad = np.median(np.abs(div - med)) + 1e-12
         keep = div <= med + beta * mad
         w = keep.astype(np.float64)
+    elif mode == "hard_gate":
+        med = np.median(div)
+        mad = np.median(np.abs(div - med)) + 1e-12
+        z = 0.6745 * (div - med) / mad        # robust (modified) z-score = confidence
+        w = np.maximum(0.0, 1.0 - div / max(tau, 1e-12))   # soft baseline
+        drop = z > kappa
+        if max_drop is not None and drop.sum() > max_drop:
+            # keep only the ``max_drop`` most-confident detections as drops
+            top = np.argsort(z)[::-1][:max_drop]
+            keep_mask = np.zeros_like(drop)
+            keep_mask[top] = True
+            drop = drop & keep_mask
+        w[drop] = 0.0
     else:
         raise ValueError(f"unknown mode '{mode}'")
     s = w.sum()
@@ -71,8 +91,10 @@ def trust_weights(div: np.ndarray, tau: float = 0.5, mode: str = "soft",
 
 
 def explanation_consistency(sig: np.ndarray, tau: float = 0.5, mode: str = "soft",
-                            consensus: str = "geomedian", beta: float = 2.0):
+                            consensus: str = "geomedian", beta: float = 2.0,
+                            kappa: float = 2.5, max_drop: int | None = None):
     """Convenience wrapper returning (weights, divergences)."""
     div = cosine_divergence(sig, consensus=consensus)
-    w = trust_weights(div, tau=tau, mode=mode, beta=beta)
+    w = trust_weights(div, tau=tau, mode=mode, beta=beta,
+                      kappa=kappa, max_drop=max_drop)
     return w, div
