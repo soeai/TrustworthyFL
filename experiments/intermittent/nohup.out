@@ -12,3 +12,23 @@
 [03:41:15] START p02/adaptive_ecf/fltrust
 [03:47:18] DONE  p02/adaptive_ecf/fltrust -> round  60 | acc=0.8007 | bsr=0.024 | agg=0.03s | det_auroc=0.944 | tpr@5=0.00
 [03:47:18] START p02/adaptive_ecf/ecf_cand_hg
+[03:53:33] DONE  p02/adaptive_ecf/ecf_cand_hg -> round  60 | acc=0.8191 | bsr=0.031 | agg=0.11s | det_auroc=0.639 | tpr@5=0.00
+[03:53:33] START p02/adaptive_ecf/ecf_cand_rg
+[03:59:49] DONE  p02/adaptive_ecf/ecf_cand_rg -> round  60 | acc=0.8200 | bsr=0.031 | agg=0.12s | det_auroc=0.667 | tpr@5=0.00
+[03:59:49] START p05/backdoor/multi_krum
+[04:05:53] DONE  p05/backdoor/multi_krum -> round  60 | acc=0.8827 | bsr=0.013 | agg=0.79s | det_auroc=1.000 | tpr@5=1.00
+[04:05:53] START p05/backdoor/fltrust
+[04:11:58] DONE  p05/backdoor/fltrust -> round  60 | acc=0.7989 | bsr=0.026 | agg=0.03s | det_auroc=0.941 | tpr@5=0.00
+[04:11:58] START p05/backdoor/ecf_cand_hg
+[04:18:21] DONE  p05/backdoor/ecf_cand_hg -> round  60 | acc=0.8148 | bsr=0.042 | agg=0.16s | det_auroc=1.000 | tpr@5=1.00
+[04:18:21] START p05/backdoor/ecf_cand_rg
+[04:24:03] DONE  p05/backdoor/ecf_cand_rg -> round  60 | acc=0.8166 | bsr=0.042 | agg=0.14s | det_auroc=1.000 | tpr@5=1.00
+[04:24:03] START p05/adaptive_ecf/multi_krum
+[04:33:08] DONE  p05/adaptive_ecf/multi_krum -> round  60 | acc=0.8832 | bsr=0.077 | agg=0.80s | det_auroc=0.431 | tpr@5=0.00
+[04:33:08] START p05/adaptive_ecf/fltrust
+[04:39:56] DONE  p05/adaptive_ecf/fltrust -> round  60 | acc=0.7993 | bsr=0.026 | agg=0.03s | det_auroc=0.941 | tpr@5=0.00
+[04:39:56] START p05/adaptive_ecf/ecf_cand_hg
+[04:46:56] DONE  p05/adaptive_ecf/ecf_cand_hg -> round  60 | acc=0.8166 | bsr=0.046 | agg=0.11s | det_auroc=1.000 | tpr@5=1.00
+[04:46:56] START p05/adaptive_ecf/ecf_cand_rg
+[04:53:57] DONE  p05/adaptive_ecf/ecf_cand_rg -> round  60 | acc=0.8170 | bsr=0.048 | agg=0.11s | det_auroc=1.000 | tpr@5=1.00
+[04:53:57] START p10/backdoor/multi_krum

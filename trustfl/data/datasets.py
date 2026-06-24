@@ -175,7 +175,37 @@ def _ensure_fraud_npz(root: str, pos_rate: float = 0.15, test_frac: float = 0.2,
     return npz
 
 
-def load_dataset(name: str, root: str = "./data", data_mode: str = "auto"):
+def _load_real_imdb_bert(acldir: str, seq_len: int = 128, cache_dir: str = "./data"):
+    """Tokenize raw aclImdb with the DistilBERT WordPiece tokenizer (cached to npz).
+    Returns padded id tensors + the tokenizer vocab size. Token-level triggers still
+    apply (a fixed WordPiece id inserted at a position)."""
+    import glob
+    cache = os.path.join(cache_dir, f"imdb_distilbert_{seq_len}.npz")
+    if os.path.exists(cache):
+        d = np.load(cache)
+        return d["Xtr"], d["ytr"], d["Xte"], d["yte"], int(d["vsz"]), seq_len
+    from transformers import DistilBertTokenizerFast
+    tok = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
+
+    def read(split):
+        X, y = [], []
+        for lab, name in [(1, "pos"), (0, "neg")]:
+            for f in sorted(glob.glob(os.path.join(acldir, split, name, "*.txt"))):
+                X.append(open(f, encoding="utf-8").read()); y.append(lab)
+        return X, np.array(y, dtype=np.int64)
+
+    def enc(X):
+        return np.array(tok(X, truncation=True, padding="max_length",
+                            max_length=seq_len)["input_ids"], dtype=np.int64)
+
+    Xtr, ytr = read("train"); Xte, yte = read("test")
+    Xtr, Xte = enc(Xtr), enc(Xte)
+    np.savez(cache, Xtr=Xtr, ytr=ytr, Xte=Xte, yte=yte, vsz=tok.vocab_size)
+    return Xtr, ytr, Xte, yte, tok.vocab_size, seq_len
+
+
+def load_dataset(name: str, root: str = "./data", data_mode: str = "auto",
+                 text_tokenizer: str = "default"):
     name = name.lower()
     mode = _resolve_mode(data_mode)
 
@@ -185,7 +215,10 @@ def load_dataset(name: str, root: str = "./data", data_mode: str = "auto"):
         if use_real:
             if not os.path.isdir(acldir):
                 acldir = _ensure_imdb(root)           # data_mode=real -> auto-download
-            Xtr, ytr, Xte, yte, vsz, slen = _load_real_imdb(acldir)
+            if text_tokenizer == "distilbert":
+                Xtr, ytr, Xte, yte, vsz, slen = _load_real_imdb_bert(acldir, cache_dir=root)
+            else:
+                Xtr, ytr, Xte, yte, vsz, slen = _load_real_imdb(acldir)
             src = "real"
         else:
             slen, vsz = 40, 500

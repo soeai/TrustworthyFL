@@ -53,7 +53,8 @@ def run(cfg: dict):
     dev = cfg["device"] if torch.cuda.is_available() or cfg["device"] == "cpu" else "cpu"
 
     Xtr, ytr, Xte, yte, meta = load_dataset(cfg["dataset"], cfg.get("root", "./data"),
-                                            data_mode=cfg.get("data_mode", "auto"))
+                                            data_mode=cfg.get("data_mode", "auto"),
+                                            text_tokenizer=cfg.get("text_tokenizer", "default"))
     mkw = {"num_classes": meta.num_classes, "in_ch": meta.in_ch}
     if meta.modality == "tabular":
         mkw["in_dim"] = meta.in_dim

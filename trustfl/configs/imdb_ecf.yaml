@@ -1,17 +1,18 @@
 # IMDB sentiment (text), ECF defense — single-GPU reference config.
 # Offline synthetic text generator unless data/aclImdb/ is present.
-dataset: imdb            # synthetic | fmnist | cifar10 | fraud | imdb
-data_mode: syn           # syn | real  (real auto-downloads Stanford aclImdb if absent)
-model: text_mlp          # small_cnn | resnet9 | mlp | text_mlp
+dataset: imdb            # synthetic | fmnist | cifar10 | imdb
+data_mode: real          # syn | real  (real auto-downloads Stanford aclImdb if absent)
+model: distilbert        # distilbert (frozen encoder + head) | text_mlp
+text_tokenizer: distilbert   # distilbert (WordPiece) | default (frequency vocab)
 root: ./data
 seed: 0
 device: cuda             # cuda | cpu
 
 num_clients: 20
 clients_per_round: 20
-rounds: 40
+rounds: 30
 local_epochs: 1
-lr: 0.05
+lr: 0.05                 # SGD on the (linear) head over frozen DistilBERT features
 batch_size: 64
 alpha: 0.5               # Dirichlet non-IID
 

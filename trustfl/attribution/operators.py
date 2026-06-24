@@ -13,6 +13,14 @@ from ..core.params import NDArrays
 
 
 def set_params(model: torch.nn.Module, params: NDArrays) -> None:
+    # Models with a frozen backbone (e.g. DistilBertClassifier) federate ONLY their
+    # trainable params; the frozen part stays at its pretrained init on every client.
+    if getattr(model, "federate_trainable_only", False):
+        tp = [p for p in model.parameters() if p.requires_grad]
+        with torch.no_grad():
+            for p, val in zip(tp, params):
+                p.copy_(torch.as_tensor(val, dtype=p.dtype, device=p.device))
+        return
     sd = model.state_dict()
     for (k, v), p in zip(sd.items(), params):
         sd[k] = torch.tensor(p, dtype=v.dtype)
@@ -20,6 +28,8 @@ def set_params(model: torch.nn.Module, params: NDArrays) -> None:
 
 
 def get_params(model: torch.nn.Module) -> NDArrays:
+    if getattr(model, "federate_trainable_only", False):
+        return [p.detach().cpu().numpy() for p in model.parameters() if p.requires_grad]
     return [v.detach().cpu().numpy() for v in model.state_dict().values()]
 
 

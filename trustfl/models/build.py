@@ -89,8 +89,60 @@ class TextEmbedMLP(nn.Module):
         return self.forward_from_embed(self.embed(ids))
 
 
+class DistilBertClassifier(nn.Module):
+    """Pretrained DistilBERT encoder (frozen) + a small trainable head, for IMDB.
+
+    Avoids the from-scratch text underfit. The frozen encoder is identical on every
+    client and is never federated; only the head (``pre`` + ``classifier``) is
+    aggregated -- ``federate_trainable_only`` makes get/set_params touch just those
+    params, keeping robust aggregation light. ``embed`` / ``forward_from_embed``
+    expose per-token gradients through the encoder for ECF attribution.
+    """
+    federate_trainable_only = True
+
+    def __init__(self, num_classes: int = 2, pretrained: str = "distilbert-base-uncased",
+                 pad_id: int = 0, freeze_encoder: bool = True):
+        super().__init__()
+        from transformers import DistilBertModel
+        self.encoder = DistilBertModel.from_pretrained(pretrained)
+        self.pad_id = pad_id
+        if freeze_encoder:
+            for p in self.encoder.parameters():
+                p.requires_grad_(False)
+        h = self.encoder.config.dim
+        self.pre = nn.Linear(h, h)
+        self.classifier = nn.Linear(h, num_classes)
+        self._am = None
+
+    def _mask(self, ids):
+        return (ids != self.pad_id).long()
+
+    def _pool(self, last_hidden, am):           # masked mean-pool (>> frozen [CLS])
+        m = am.unsqueeze(-1).float()
+        return (last_hidden * m).sum(1) / m.sum(1).clamp(min=1.0)
+
+    def _head(self, feat):
+        return self.classifier(F.relu(self.pre(feat)))
+
+    def embed(self, ids):                       # input embeddings + stash attn mask
+        self._am = self._mask(ids)
+        return self.encoder.embeddings(ids)
+
+    def forward_from_embed(self, emb):          # full encoder w/ grad -> head (ECF path)
+        h = self.encoder(inputs_embeds=emb, attention_mask=self._am).last_hidden_state
+        return self._head(self._pool(h, self._am))
+
+    def forward(self, ids):                     # train/eval: frozen encoder under no_grad
+        am = self._mask(ids)
+        with torch.no_grad():
+            h = self.encoder(input_ids=ids, attention_mask=am).last_hidden_state
+        return self._head(self._pool(h, am))
+
+
 def build_model(name: str, **kw) -> nn.Module:
     name = name.lower()
+    if name == "distilbert":
+        return DistilBertClassifier(num_classes=kw.get("num_classes", 2))
     if name in ("small_cnn", "fmnist"):
         return SmallCNN(in_ch=kw.get("in_ch", 1), num_classes=kw.get("num_classes", 10))
     if name in ("resnet9", "cifar10"):

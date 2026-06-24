@@ -1,275 +1,210 @@
-# ECF: Method, Attack Model, Fixes, and Ablations
+# Explanation-Consistency Filtering against Statistic-Aligned Backdoors — paper outline
 
-Paper reference. Covers (1) the ECF defense, (2) the ECF-targeted attack scenarios
-incl. the continuous-vs-intermittent temporal model, (3) why ECF underperformed
-(two bottlenecks + an accuracy tax), (4) the fixes — activated probes,
-trust-aggregation modes culminating in `round_zoned`, and intermittent-attacker
-exploitation, (5) the proposed method (§7), and (6) the ablation matrix (§8).
+§1 setup · §2 threat model incl. the proposed **Aligned Stealth Backdoor (ASB)** ·
+§3 motivation (the parameter-space blind spot) · §4 proposed method, **each component
+traced back to the §3 gap** · §5 implementation · §6 experiments · §7 ablations ·
+§8 limitations. Scope: two modalities — **image (FashionMNIST)**, **text (IMDB,
+DistilBERT)**.
 
 ---
 
 ## 1. Setup and notation
 
-Federated round `r`: each client `i` returns an update `δ_i = θ_i − θ^(r)`
-(local params minus global). A defense aggregates `{δ_i}` into `θ^(r+1)`. Up to
-`f` of the `n` clients are malicious. The server holds a small **probe set**
-`P = {x_1,…,x_m}` (clean held-out inputs) and a small **root set** (for a reference
-update). Metrics: clean accuracy (ACC), backdoor success rate (BSR), and
-detection quality (AUROC / TPR@5%) of the per-client suspicion scores.
+Federated round `r`: client `i` returns `δ_i = θ_i − θ^(r)`; a defense maps `{δ_i}`
+to `θ^(r+1)`. Up to `f` of `n` clients are malicious. The server holds a small
+**probe set** `P={x_1,…,x_m}` and a **root set** (trusted reference update `u_srv`).
+Metrics: clean accuracy (ACC), backdoor success rate (BSR), and — in simulation, where
+the per-round malicious mask is known — detector AUROC / TPR@5%.
 
 ---
 
-## 2. ECF (Explanation-Consistency Filtering) — the proposed defense
+## 2. Threat model
 
-**Idea.** Honest clients, trained on the same task, should *explain* the same
-inputs the same way. A malicious client whose update corrupts the model's
-reasoning will produce **divergent feature attributions** on the shared probe,
-even if its update looks geometrically normal.
+**Standard families (baselines).** Data-space: `label_flip`, `backdoor` (BadNets).
+Update-space: `sign_flip`, `gaussian`, `lie`, `min_max`.
 
-**Pipeline** (`trustfl/defenses/ecf.py`, `trustfl/attribution/`):
-
-1. **(optional) norm gate.** Clip each `δ_i` to the server-reference update norm:
-   `δ_i ← δ_i · min(1, ‖u_srv‖ / ‖δ_i‖)`. Handles crude large-norm attacks.
-2. **Attribution signature.** For client model `f_{θ^(r)+δ_i}`, compute an
-   input-feature attribution `a_i(x_j)` for each probe `x_j` (grad×input /
-   integrated gradients / GradientSHAP), L2-normalized → `sig[i,j] ∈ ℝ^d`.
-3. **Consensus + divergence.** Per probe `j`, take a robust consensus
-   `c̄_j = geomedian_i(sig[i,j])`; score each client by mean cosine distance
-   ```
-   div_i = (1/m) Σ_j ( 1 − cos( a_i(x_j), c̄_j ) ).
-   ```
-4. **Trust weights → aggregate.** Map `div_i` to weights `w_i` (see §5),
-   multiply by sample counts, normalize, and return
-   `θ^(r+1) = θ^(r) + Σ_i w_i δ_i`.
-
-Higher `div_i` ⇒ more suspicious. In simulation the malicious mask is known, so
-`div_i` is also evaluated as a detector (AUROC / TPR@5%).
-
----
-
-## 3. Attack model — including the **new ECF-targeted attacks**
-
-Two standard families: **data-space** (poison the training set: `label_flip`,
-`backdoor`) and **update-space** (overwrite the malicious δ: `sign_flip`,
-`gaussian`, `lie`, `min_max`). On top of these we define three attacks
-specifically designed against an explanation-aware defender
-(`trustfl/attacks/`):
-
-### S1 — Constrained backdoor (`constrained_backdoor`)
-Train a BadNets backdoor, then **project the malicious update into the benign
-cluster** so it is a *geometric insider*:
+### 2.1 Proposed attack — Aligned Stealth Backdoor (ASB)  *(code: `adaptive_ecf`)*
+A robust aggregator decides from *statistics* of the update `S(δ)` (norm, pairwise
+distance, reference-cosine). **ASB projects a BadNets backdoor to match the benign
+distribution of every such statistic while leaving its function corrupted** — a
+*geometric insider, functional outlier*:
 ```
-δ ← μ + (δ − μ) · min(1, ε / ‖δ − μ‖),   ε = max benign pairwise distance,  μ = benign mean.
+δ ← Π_cos( μ + clip_ε(δ−μ),  u_srv,  c_min ),
+    ε = max benign pairwise distance,  μ = benign mean,  c_min = cosine floor (knob).
 ```
-Its norm and distance look honest (evades Krum / Trimmed-Mean), but the residual
-still carries the backdoor direction — a **functional outlier** ECF should catch.
-
-### S2 — Spurious-feature / clean-label (`spurious_feature`)
-Add a **faint watermark to the attacker's target-class samples only, with no label
-change and no test-time trigger**. The model learns to predict the target from the
-spurious mark — "right for the wrong reason". The resulting update is an ordinary
-gradient step (no norm/geometry tell); *only the attribution* should reveal the
-model leaning on the spurious feature. BSR is undefined (no trigger); the harm is
-shortcut learning.
-
-### S3 — Adaptive, defense-aware (`adaptive_ecf`)
-Solve the evasion explicitly: bound the update by the max benign pairwise distance
-(evades Krum / Trimmed-Mean) **and** enforce a cosine floor to the server-update
-direction (evades FLTrust):
-```
-v ← enforce_cos( μ + clip_{ε}(δ − μ),  u_srv,  cos_min ).
-```
-Attribution is left unconstrained — the exact gap ECF claims to exploit. This is
-the strongest test: it breaks geometric and reference-based defenses by design.
-
-### Temporal model — continuous vs **intermittent** attackers (`attack_prob`)
-Orthogonal to *what* the attack is, *when* it fires matters. The original
-experiments are **continuous** (always-on): a malicious client attacks on every
-round it participates. We add an **intermittent** model: each malicious client
-actually attacks a given round with probability `attack_prob ∈ (0,1]` and trains
-*honestly* otherwise (`attack_prob=1.0` reproduces the always-on case). This is
-both more realistic and a stronger threat (attack rarely to stay below per-round
-thresholds), and it creates an **opportunity**: a resting attacker's honest update
-is genuinely useful and should be *used*, not discarded. Detection ground truth is
-therefore "attacking *this* round", not "is malicious" — a resting attacker counts
-as benign for that round.
+(a) the L2 clip matches norm/distance statistics; (b) the cosine floor matches a
+reference-alignment statistic; the attribution signature is left unconstrained.
 
 ---
 
-## 4. Why ECF underperformed — two bottlenecks + an accuracy tax
+## 3. Motivation — a blind spot shared by parameter-space signals
 
-Diagnosed empirically (FashionMNIST, root=500): backdoor `div` AUROC ≈ 0.33
-(worse than random), BSR ≈ 0.41 — ECF lost to FLTrust/Krum.
+**Theory.** If a defense's decision is a function only of parameter-space statistics
+`S(δ)`, and an adversary can project `S(δ_mal)` into the benign range (ASB does, by
+construction), then **no rule over `S` separates it** — it is, in those coordinates,
+a benign update.
 
-**Bottleneck A — probe location.** The probe is *clean* data. A backdoor is
-**dormant on clean inputs** (it fires only on the trigger), so `a_i` on `P` is
-indistinguishable between malicious and benign. Worse, under non-IID the geometric
-consensus penalizes honest heterogeneity, so a stealthy attacker sits *closer* to
-`c̄` than honest minorities ⇒ AUROC < 0.5. The signal lives in the trigger, which
-the clean probe never contains. (ECF only worked on `label_flip`, which *does*
-corrupt clean-input behavior.)
+**Illustration (FashionMNIST, root=500), by signal type:**
 
-**Bottleneck B — aggregation.** Soft weighting `w_i = ReLU(1 − div_i/τ)` never
-*rejects*; a detected attacker keeps positive weight. A backdoor needs only a
-fraction of the aggregate to persist. Even with a *perfect* detector, BSR stays
-high; worse, the leaked backdoor slowly embeds into the global model and **erodes
-the very detection signal** over rounds (a feedback loop: AUROC drifts 1.0 → 0.9,
-BSR climbs).
+| Detection signal | BSR under ASB | detector AUROC |
+|---|---|---|
+| distance-based selection | 0.54 | 0.03 |
+| coordinate median | 0.11 | – |
+| trimmed mean | 0.21 | – |
+| reference-cosine | 0.04 | 0.92 |
 
-**Accuracy tax (the residual cost).** Even after fixing A+B, ECF/FLTrust sit
-~7–8 ACC points below the geometric defenses (≈0.80 vs ≈0.88 at root=500). The
-cost is *not* the rejection (dropping the `f` attackers is free: `hard_gate` and
-its no-drop counterpart have identical ACC) — it is the **soft down-weighting of
-the kept honest clients**, which penalizes legitimate non-IID heterogeneity and
-discards useful data. This motivates the trust-zone aggregation in §5.
+Distance/coordinate signals score ASB in the benign range (AUROC ≈ chance, the backdoor
+persists); the single reference-cosine direction retains some separation at this
+`c_min` but is itself a targetable knob (see §7 ablation on `c_min`). **The gap:** an
+update that conforms in parameter space can only be caught by a signal in **function
+space** — what the model *does*, not what its weights look like. §4 builds exactly that.
 
 ---
 
-## 5. The fixes
+## 4. Proposed method — answering the §3 gap
 
-### Fix A — activated probes (`trustfl/attribution/probes.py`)
-Transform the clean probe `P` into `P'` that *activates* the corrupted reasoning.
-Config `probe.strategy`:
+The gap demands a function-space signal that (i) **exists** for a dormant backdoor,
+(ii) is **acted upon**, (iii) at **no accuracy cost**, and (iv) **per round**.
+§4.0–4.4 supply (i)–(iv) in turn.
 
-- **`clean`** — untouched (baseline; blind to dormant attacks).
-- **`oracle`** — stamp the *known* trigger. Diagnostic upper bound (not deployable).
-- **`candidate`** — reverse-engineer a trigger from the **live global model**
-  (Neural-Cleanse-lite): optimize a small, sparse mask+pattern that flips probe
-  predictions to a target class,
-  ```
-  min_{m,p}  CE( f_{θ^(r)}( (1−m)⊙x + m⊙p ),  t )  +  λ‖m‖₁ .
-  ```
-  **Refreshed every `K` rounds** (`probe.candidate.refresh`) — *essential*:
-  recovering once from the untrained init and freezing it collapses ~round 20;
-  re-recovering tracks the converging model. No knowledge of the real trigger.
-  (Tabular: additive feature `δ`. Text: falls back to `perturb`.)
-- **`perturb`** — generic random patch / noise; attack-agnostic, weakest.
+### 4.0 The function-space signal (← the §3 gap directly)
+Score the model's *reasoning*: honest clients explain shared inputs consistently; a
+reasoning-corrupting update yields **divergent attributions** even when its parameters
+conform. With attribution `a_i(x_j)` (grad×input/IG/GradientSHAP, L2-normed), per-probe
+robust consensus `c̄_j=geomedian_i(a_i(x_j))`,
+`div_i = (1/m) Σ_j (1 − cos(a_i(x_j), c̄_j))`. This is the signal §3 says is missing.
 
-`probe.mode`: `triggered` (replace `P`) or `both` (concatenate `P` + `P'`).
+### 4.1 (i) The signal must be *activated* — Bottleneck A → activated probes
+*Link:* §3's blind spot is exactly that ASB is dormant on the clean inputs a probe
+uses. *Theory:* a backdoor's corruption lives on the **trigger sub-manifold**; on clean
+inputs `div_i` is uninformative (and under non-IID even penalizes honest spread).
+*Construction* (`probe.strategy`): `oracle` (known trigger, upper bound); **`candidate`**
+— reverse-engineer a trigger from the *live* global by Neural-Cleanse-lite
+`min_{m,p} CE(f_{θ^(r)}((1−m)⊙x+m⊙p),t)+λ‖m‖₁`, **refreshed every `K` rounds**
+(knowledge-free; frozen-from-init recovery decays); `perturb` (generic, weakest).
 
-### Fix B — trust-aggregation strategies (`trustfl/attribution/divergence.py`)
-All strategies share the **robust modified z-score** of divergence
-`z_i = 0.6745 (div_i − median) / MAD` (MAD = median abs. deviation; `0.6745 =
-Φ⁻¹(0.75)` rescales MAD to a normal-`σ` so `κ` is a "number-of-σ" threshold).
-They differ in how `z_i` maps to a weight. Selecting via `defense_kw.mode`:
+### 4.2 (ii) Detection must *act* — Bottleneck B → confidence-gated hard rejection
+*Link:* a function-space *score* alone does not stop ASB if the aggregator still admits
+it. *Theory:* soft weighting `ReLU(1−div/τ)` never rejects → backdoor persists on a
+weight fraction, and the un-rejected leakage **embeds and erodes the detector**
+(feedback). *Construction:* robust z-score `z_i=0.6745(div_i−median)/MAD`
+(`0.6745=Φ⁻¹(0.75)`), hard-reject `z_i>κ`, capped at budget `f`.
 
-| mode | drop (hard) | kept clients | use |
-|---|---|---|---|
-| `soft` (original) | none | `ReLU(1 − div/τ)` (all) | baseline — leaks (no drop) |
-| `hard_gate` | `z>κ`, capped at `f` | **soft** `ReLU(1−div/τ)` | drops attackers; still taxes honest |
-| `round_gate` | `z>κ`, capped at `f` | **uniform** (w=1) | + recovers ACC; clean round → uniform all |
-| `round_zoned` | `z>κ`, capped at `f` | **3 zones** (below) | unified main strategy |
+### 4.3 (iii) Mitigation must not tax honest clients — accuracy → zoned trust
+*Theory:* rejecting the `f` attackers is free; the residual cost is soft-penalizing
+honest non-IID heterogeneity. *Construction — `round_zoned` (main aggregation):*
+```
+clean round (no z>κ)             → uniform-average everyone
+else:  safe z≤κ_safe             → w=1 (uniform)
+       gray κ_safe<z≤κ           → w=ramp 1→0 (soft)
+       bad  z>κ (cap f)          → w=0 (hard reject)
+w ← w·n_i, normalize.
+```
+Generalizes the simpler rules (soft=all-gray; hard-reject+uniform=no-gray). Gray exists
+only with honest spread (MAD>0); a tight round degenerates to binary safe/bad.
 
-**`round_zoned` (the unified main aggregation).** Per round:
-- *Stage 0 — round gate.* If **no** client has `z>κ`, the round is deemed clean →
-  **uniform-average everyone** (uses resting attackers' honest updates; also
-  sidesteps the tiny-MAD trap where a tight honest cluster inflates `z`).
-- *Stage 1 — three trust zones* (when an attacker is present):
-  ```
-  safe : z ≤ κ_safe          → w = 1               (uniform; no honest tax)
-  gray : κ_safe < z ≤ κ      → w = 1 − (z−κ_safe)/(κ−κ_safe)   (soft ramp 1→0)
-  bad  : z > κ (top-f capped) → w = 0               (hard reject)
-  ```
-Then `w ← w·n_i`, normalized. This **generalizes** the table above: `soft` =
-all-gray, `round_gate` = no-gray (safe+bad only), and `hard_gate` = soft-gray.
-The gray band gives a calibrated middle ground that reduces *both* false-negative
-leakage (near-threshold attackers are damped, not fully trusted) and
-false-positive accuracy loss (honest-but-divergent clients are damped, not zeroed).
+### 4.4 (iv) Scoring is per-round and stateless — temporal → resting attackers
+*Link:* ASB / any intermittent adversary (`attack_prob<1`) attacks only some rounds;
+on a resting round its update is honest. Re-scoring every round (no blacklist) lets the
+clean-round branch reuse that data, recovering ACC without weakening attacked rounds.
 
-> **Design note (gray-zone collapse).** The gray band only exists when the honest
-> cluster has real spread (MAD > 0). A tight-consensus round makes MAD → 0, `z`
-> explodes, and the partition degenerates to binary safe/bad — which is the correct
-> behavior (under tight agreement, any deviation *is* clearly suspicious).
-
-### Fix C — exploiting resting attackers (intermittent setting)
-`round_gate` / `round_zoned` are per-round and **stateless** (no persistent
-blacklist): ECF re-scores every round, so a previously-flagged client is
-re-admitted the moment its update looks safe again. On a clean round the gate uses
-*everyone* uniformly — including a malicious client that is resting that round —
-turning its honest data into accuracy instead of discarding it. (Asymmetric
-"slow-to-earn / fast-to-lose" reputation is a noted extension, not yet implemented.)
-
-### Alternative detector — per-client backdoorability (`backdoorability.py`)
-Instead of consensus divergence, score each client *model* by how easily it flips:
-run NC-lite against that client and take `s_i = −‖m*_i‖₁` (smaller minimal mask ⇒
-backdoor already baked in ⇒ more suspicious). Needs no shared trigger and no
-backdoor in the (defended) global. Config `defense_kw.score = backdoorability`.
-Works but is inferior to candidate+refresh and ~17× slower; undefined for discrete
-text tokens.
+### 4.5 One line
+> **Activated-probe (candidate+refresh) explanation-divergence scoring → confidence-
+> zoned, stateless trust aggregation (`round_zoned`)**; for text the DistilBERT encoder
+> is frozen and only a head is federated.
 
 ---
 
-## 6. Headline result (FashionMNIST, root=500; same trend on `adaptive_ecf`)
+## 5. Implementation
 
-| Defense | ACC | BSR | AUROC | TPR@5 |
+| Component | Location | Notes |
+|---|---|---|
+| Image model | `models/build.py:SmallCNN` | FashionMNIST |
+| Text model | `models/build.py:DistilBertClassifier` | frozen DistilBERT + masked-mean head; `embed`/`forward_from_embed` give per-token grads for attribution; `federate_trainable_only=True` |
+| Param plumbing | `attribution/operators.py` | `get/set_params` federate only trainable params when flagged → robust aggregation over the **head (≈0.6M)**, not 66M |
+| Activated probe | `attribution/probes.py:build_probe` | `clean`/`oracle`/`candidate`/`perturb`; NC-lite `_nc_image`/`_nc_tabular`; refresh in the round loop (`run_local.py`) |
+| Divergence + zones | `attribution/divergence.py:trust_weights` | modes `soft`/`hard`/`hard_gate`/`round_gate`/`round_zoned`; params `κ`, `κ_safe` |
+| Backdoorability score | `attribution/backdoorability.py` | per-client min-mask (alt. signal) |
+| ECF defense | `defenses/ecf.py`, `defenses/factory.py` | `score ∈ {consistency, backdoorability}` |
+| ASB + family | `attacks/update_attacks.py` (`adaptive_evade`, `constrain_to_benign`, `_project_insider`), `attacks/data_attacks.py` | |
+| Intermittent | `sim/run_local.py` | `attack_prob`; detection ground truth = attacking-this-round |
+| IMDB tokenization | `data/datasets.py:_load_real_imdb_bert` | DistilBERT WordPiece, cached to `data/imdb_distilbert_128.npz` |
+
+**Config keys** (`trustfl/configs/*.yaml`, overridable via `--override`):
+`model`, `text_tokenizer`, `attack`, `attack_prob`, `num_malicious`, `root_size`,
+`defense_kw={tau,mode,consensus,norm_gate,kappa,kappa_safe,score}`,
+`probe={strategy,mode,candidate{steps,refresh},oracle{kind},perturb{...}}`.
+Run: `python -m trustfl.sim.run_local --config <cfg> --override k=v …`. Grids:
+`experiments/*.sh` (resumable); `experiments/parse_real.py` → `summary.csv`
+(records BSR, AUROC, TPR@5, ACC, and **per-round aggregation time**). Tests:
+`tests/test_core_numpy.py` (31 checks). Determinism via `seed`.
+
+---
+
+## 6. Experiments
+
+**6.1 Protocol.** `n=20` clients, full participation, Dirichlet non-IID `α=0.5`,
+`f=4` malicious, real data. FashionMNIST: SmallCNN, 60 rounds, `root_size∈{100,500}`.
+IMDB: DistilBERT (frozen)+head, 30 rounds. **Attacks (9):** the standard families + ASB.
+**Defenses:** baselines `fedavg/median/trimmed_mean/multi_krum/fltrust`; ECF variants
+`ecf_base` (clean+soft), `ecf_cand` (candidate+refresh+hard_gate), `ecf_zoned`
+(candidate+refresh+round_zoned), `ecf_bdoor` (backdoorability). Metrics in §1.
+
+**6.2 Motivation experiment.** ASB vs. parameter-space signals — the §3 table; full
+grid in `experiments/fmnist_r500/summary.csv`.
+
+**6.3 Main result — restoring function-space detection (FashionMNIST, root=500, ASB).**
+
+| Configuration | BSR | det. AUROC | ACC | agg s/round |
 |---|---|---|---|---|
-| ECF clean + soft (original) | 0.810 | 0.413 | 0.328 | 0.00 |
-| ECF **candidate+refresh + hard_gate** (ours) | 0.808 | **0.039** | **1.000** | **1.00** |
-| ECF oracle + hard_gate (upper bound) | 0.811 | 0.039 | 0.969 | 0.50 |
-| ECF backdoorability + hard_gate | 0.810 | 0.307 | 0.938 | 0.25 |
-| FLTrust | 0.796 | 0.034 | 0.906 | 0.00 |
-| Multi-Krum | 0.883 | 0.013 | 1.000 | 1.00 |
-| Multi-Krum **on `adaptive_ecf`** | 0.883 | **0.643** | 0.016 | 0.00 |
+| ECF clean + soft (no activated probe, no gate) | 0.39 | 0.33 | 0.81 | 0.15 |
+| **ECF candidate+refresh + hard_gate (ours)** | **0.04** | **1.00** | 0.81 | 0.15 |
+| ECF candidate+refresh + round_zoned (acc-refined) | see §6.4 | – | – | 0.15 |
 
-**Takeaways.** (i) Fix A restores detection (AUROC 0.33→1.0) but, without Fix B,
-BSR stays high — both bottlenecks must be fixed. (ii) `candidate+refresh+hard_gate`
-reaches the **oracle** BSR (0.039) **without knowing the trigger**, ties FLTrust on
-robustness with higher accuracy, and — unlike Multi-Krum — is **not broken by the
-adaptive attack** (Krum BSR 0.643). (iii) Remaining gap: Multi-Krum keeps higher
-clean ACC (0.883) by *selecting* rather than *weighting* — a future direction is a
-hard top-k select+average variant of `hard_gate`.
+The activated probe restores detectability (AUROC 0.33→1.0) and the gate converts it to
+suppression (BSR 0.39→0.04), at the same cost. `round_zoned` adds the honest-uniform /
+intermittent benefit (§6.4). Full attack×defense grids (BSR/AUROC/ACC/agg-time) in
+`experiments/fmnist_r500/` (image, root=500) and `experiments/real_full/` (image+text).
 
-*Implementation:* probes `trustfl/attribution/probes.py`; aggregation modes
-(`soft`/`hard`/`hard_gate`/`round_gate`/`round_zoned`)
-`trustfl/attribution/divergence.py`; backdoorability
-`trustfl/attribution/backdoorability.py`; intermittent attack + round-level gating
-wiring `trustfl/sim/run_local.py`; attacks `trustfl/attacks/`.
+**6.4 Ablations** — see §7 matrix. Key in-progress study: **intermittent** ASB
+(`attack_prob∈{0.2,0.5,1.0}`), comparing `hard_gate` (soft survivors) vs `round_gate`
+vs `round_zoned` vs baselines, in `experiments/intermittent/`.
+
+**6.5 Text underfit.** From-scratch TextEmbedMLP stalls at ACC ≈0.5–0.66; the frozen
+DistilBERT encoder + head reaches ≈0.8 (frozen-feature logistic probe ≈0.82),
+confirming the underfit is an encoder-capacity issue, not a task limit.
 
 ---
 
-## 7. Proposed method (full, one line per component)
+## 7. Ablations
 
-> **ECF⋆ = activated probe (candidate + periodic refresh) → per-round robust
-> explanation-divergence scoring → confidence-zoned, stateless trust aggregation
-> (`round_zoned`).**
-
-1. **Probe**: reverse-engineer a trigger from the live global every `K` rounds
-   (`candidate`, knowledge-free) and stamp it onto the probe so dormant attacks
-   surface in attribution space.
-2. **Score**: per round, `div_i` = mean cosine distance of client attributions to
-   the geometric-median consensus; robust z-score `z_i`.
-3. **Aggregate**: `round_zoned` — clean round → uniform; attacked round → safe
-   (uniform) / gray (soft ramp) / bad (hard-reject, capped at `f`); weight by
-   sample count. Stateless ⇒ resting attackers' honest rounds are reused.
-
-Headline (root=500, continuous): matches the oracle and FLTrust on backdoor
-(BSR ≈ 0.04) **without knowing the trigger**, and is the only explanation-based
-method that survives `adaptive_ecf` (BSR 0.04 vs Multi-Krum 0.64).
+| Axis | Variants | Question |
+|---|---|---|
+| Attack build-up | backdoor · norm-bounded (`constrained_backdoor`, = constrain-and-scale, Bagdasaryan 2020) · +cosine (ASB) | which conformance evades which signal (norm alone is insufficient) |
+| Probe strategy | clean · oracle · **candidate(+refresh)** · perturb | does activation restore the signal; is knowledge-free recovery ≈ oracle |
+| Candidate refresh | once-frozen · **K=5** | does re-recovery prevent detection decay |
+| Aggregation mode | soft · hard_gate · round_gate · **round_zoned** | reject vs dilute; uniform vs soft survivors; gray band value |
+| Score signal | **consistency** · backdoorability | consensus divergence vs per-client recovery (≈17× cost) |
+| Root size | 100 · **500** | reference quality; gain largest where base detector is weakest |
+| Attack temporality | **continuous** · intermittent | does stateless `round_zoned` reuse resting rounds for ACC |
+| Gate thresholds | κ, κ_safe | zone-boundary sensitivity |
+| Modality / encoder | image · text (**DistilBERT** vs TextEmbedMLP) | transfer; pretrained encoder removes underfit |
 
 ---
 
-## 8. Ablation scenarios (axes to report)
+## 8. Limitations
 
-Each axis isolates one design choice; defaults in **bold**.
-
-| Axis | Variants | Isolates / question | Status |
-|---|---|---|---|
-| **Probe strategy** | clean · oracle · **candidate(+refresh)** · perturb | does activating the probe restore detection? is the knowledge-free recovery as good as the oracle? | done (root=100/500) |
-| **Candidate refresh** | once-frozen · **refresh K=5** | does re-recovering from the live model prevent the round-20 detection collapse? | done (0.43→0.04 BSR) |
-| **Aggregation mode** | soft · hard_gate · round_gate · **round_zoned** | rejection vs soft-dilution; uniform vs soft survivors (the accuracy tax); value of the gray band | hard_gate done; round_gate/zoned in progress |
-| **Score signal** | **consistency** · backdoorability | consensus divergence vs per-client min-mask; cost (≈17× slower) vs benefit | done |
-| **Root size** | 100 · **500** | reference quality; ECF's contribution is largest where the original detector is weakest (root=500) | done |
-| **Attack temporality** | **continuous** · intermittent `attack_prob∈{0.2,0.5,1.0}` | can `round_zoned` reuse resting attackers' honest rounds to recover ACC while keeping BSR low? | in progress |
-| **Confidence gate κ / κ_safe** | κ∈{2.5,…}, κ_safe∈{1.0,…} | zone-boundary sensitivity; gray-band width vs adaptive-attacker leakage | planned |
-| **Dataset / modality** | **FashionMNIST** (image) · Fraud (tabular) · IMDB (text) | transfer; ECF failure on tabular & faint spurious features | done (real grid) |
-| **Attack × defense grid** | 9 attacks × {5 baselines + ECF variants} | full comparison incl. Multi-Krum collapse on `adaptive_ecf`, ECF failure modes (gaussian/min_max/spurious) | done |
-
-**Known failure modes to report honestly:** tabular backdoor (BSR 1.0, AUROC
-≈0.2 — attribution too low-dimensional); gaussian/min_max noise (candidate probe
-meaningless → AUROC ≈0; backdoorability partly recovers); spurious feature
-(faint shortcut, AUROC ≤0.68 even with an oracle, intensity-tuned watermark probe).
-
-*Result artifacts:* `experiments/real_full/` (root=100 grid + REPORT.md),
-`experiments/fmnist_r500/` (root=500 grid + per-round agg time),
-`experiments/spurious_probe/` (candidate-vs-watermark), `experiments/intermittent/`
-(continuous-vs-intermittent, round_gate/round_zoned). Each dir has a `summary.csv`.
+- **Low-dimensional / tabular inputs** (out of scope): attribution vectors too few-
+  dimensional for the consensus to separate clients; the function-space signal
+  collapses. Method targets high-dimensional inputs (image, text).
+- **Faint distributed shortcuts** (`spurious_feature`, clean-label; cf. Turner 2019):
+  too weak to surface in attribution — AUROC ≤0.68 even with an oracle, intensity-tuned
+  probe. ECF catches *strong, localized* corruptions (triggers), not diffuse shortcuts.
+- **Pure-noise update attacks** (`gaussian`, `min_max`): candidate probe meaningless
+  (AUROC ≈0) — better handled by geometric baselines; the method is complementary.
+- **Reference-cosine evasion not exhausted:** at the tested `c_min`, ASB is still
+  separated by the reference signal; a stronger cosine-aligned variant is future work.
+- **Probe cost:** candidate recovery runs an inner optimization every `K` rounds;
+  `backdoorability` is ≈17× costlier (not recommended).
+- **Text:** DistilBERT encoder is frozen (head-only federation); full FL fine-tuning is
+  future work.

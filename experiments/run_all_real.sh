@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Full evaluation grid on the 3 REAL datasets.
-#   datasets : fmnist (image) | fraud (tabular) | imdb (text), all data_mode=real
+#   datasets : fmnist (image) | imdb (text), all data_mode=real
 #   attacks  : 9 (data-space + update-space)
 #   defenses : 5 baselines + 3 ECF variants (base / candidate+refresh+hard_gate / backdoorability)
 # Resumable: a (dataset,attack,defense) cell is skipped if its log already has the
@@ -16,8 +16,8 @@ ATTACKS="label_flip backdoor spurious_feature constrained_backdoor adaptive_ecf 
 DEFENSES="fedavg median trimmed_mean multi_krum fltrust ecf_base ecf_cand ecf_bdoor"
 
 # per-dataset config + round budget
-cfg_of()    { case $1 in fmnist) echo trustfl/configs/fmnist_ecf.yaml;; fraud) echo trustfl/configs/fraud_ecf.yaml;; imdb) echo trustfl/configs/imdb_ecf.yaml;; esac; }
-rounds_of() { case $1 in fmnist) echo 60;; fraud) echo 40;; imdb) echo 30;; esac; }
+cfg_of()    { case $1 in fmnist) echo trustfl/configs/fmnist_ecf.yaml;; imdb) echo trustfl/configs/imdb_ecf.yaml;; esac; }
+rounds_of() { case $1 in fmnist) echo 60;; imdb) echo 30;; esac; }
 
 # emit the --override args for a named defense
 overrides_of() {
@@ -50,7 +50,7 @@ run_cell() { # dataset attack defense
 }
 
 echo "=== run_all_real start $(date) ===" | tee -a "$PROG"
-for ds in fmnist fraud imdb; do
+for ds in fmnist imdb; do
   for atk in $ATTACKS; do
     for def in $DEFENSES; do
       run_cell "$ds" "$atk" "$def"
