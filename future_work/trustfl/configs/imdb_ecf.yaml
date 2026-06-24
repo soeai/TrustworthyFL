@@ -1,0 +1,40 @@
+# IMDB sentiment (text), ECF defense — single-GPU reference config.
+# Offline synthetic text generator unless data/aclImdb/ is present.
+dataset: imdb            # synthetic | fmnist | cifar10 | imdb
+data_mode: real          # syn | real  (real auto-downloads Stanford aclImdb if absent)
+model: distilbert        # distilbert (frozen encoder + head) | text_mlp
+text_tokenizer: distilbert   # distilbert (WordPiece) | default (frequency vocab)
+root: ./data
+seed: 0
+device: cuda             # cuda | cpu
+
+num_clients: 20
+clients_per_round: 20
+rounds: 30
+local_epochs: 1
+lr: 0.05                 # SGD on the (linear) head over frozen DistilBERT features
+batch_size: 64
+alpha: 0.5               # Dirichlet non-IID
+
+attack: backdoor         # label_flip | backdoor | spurious_feature | constrained_backdoor | adaptive_ecf | sign_flip | gaussian | lie | min_max
+num_malicious: 4
+target_label: 1          # positive sentiment
+
+# text trigger / spurious tokens (reserved ids: 2=TRIGGER, 3=SPUR)
+trigger_token: 2
+trigger_pos: 0
+spurious_token: 3
+spurious_pos: 1
+
+defense: ecf             # fedavg | trimmed_mean | median | multi_krum | fltrust | ecf
+defense_kw:
+  tau: 0.5
+  mode: soft
+  consensus: geomedian
+  norm_gate: true
+
+# ECF attribution (per-token saliency over embeddings)
+attribution: grad_x_input   # grad_x_input | integrated_gradients | gradient_shap
+ig_steps: 16
+probe_size: 64
+root_size: 500

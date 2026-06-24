@@ -13,7 +13,10 @@ overrides_of() {
     ecf_cand_rz) echo "defense=ecf attribution=grad_x_input defense_kw={\"tau\":0.5,\"mode\":\"round_zoned\",\"consensus\":\"geomedian\",\"norm_gate\":true,\"kappa\":2.5,\"kappa_safe\":1.0} $C";;
   esac
 }
-run_cell() { local p=$1 atk=$2 def=$3 tag="p$(echo "$p"|sed 's/\.//')" log="$OUT/$tag/${2}__${3}.log"
+run_cell() {
+  local p=$1 atk=$2 def=$3
+  local tag="p$(echo "$p" | sed 's/\.//')"
+  local log="$OUT/$tag/${atk}__${def}.log"
   mkdir -p "$OUT/$tag"
   if grep -qE "round +$R " "$log" 2>/dev/null; then echo "[$(date +%H:%M:%S)] SKIP $tag/$atk/$def"|tee -a "$PROG"; return; fi
   echo "[$(date +%H:%M:%S)] START $tag/$atk/$def"|tee -a "$PROG"
