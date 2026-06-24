@@ -1,6 +1,7 @@
-"""Parse experiments/real_full/<dataset>/<attack>__<defense>.log -> summary.csv.
+"""Parse <root>/<dataset>/<attack>__<defense>.log -> summary.csv.
 
-Reads the final-round line of each run log and the peak backdoor success rate.
+Reads every per-round line, then records the final-round metrics, the peak
+backdoor success rate, and the aggregation time per round (mean + total).
 Usage: python3 experiments/parse_real.py experiments/real_full
 """
 import csv
@@ -8,11 +9,12 @@ import re
 import sys
 from pathlib import Path
 
-NUM = r"([0-9.]+|nan)"
-LINE = re.compile(
-    rf"round\s+(\d+)\s*\|\s*acc={NUM}\s*\|\s*bsr={NUM}"
-    rf"(?:.*det_auroc={NUM})?(?:.*tpr@5={NUM})?"
-)
+ROUND = re.compile(r"round\s+(\d+)\b")
+
+
+def field(line, key):
+    m = re.search(key + r"=([0-9.]+|nan)", line)
+    return m.group(1) if m else None
 
 
 def f(x):
@@ -22,17 +24,25 @@ def f(x):
 def parse_log(path: Path):
     rounds = []
     for line in path.read_text().splitlines():
-        m = LINE.search(line)
-        if m:
-            rounds.append(m.groups())
+        if not ROUND.search(line) or "acc=" not in line:
+            continue
+        rounds.append({
+            "round": int(ROUND.search(line).group(1)),
+            "acc": f(field(line, "acc")), "bsr": f(field(line, "bsr")),
+            "auroc": f(field(line, "det_auroc")), "tpr": f(field(line, "tpr@5")),
+            "agg": f(field(line, "agg")),
+        })
     if not rounds:
         return None
     last = rounds[-1]
-    bsrs = [f(r[2]) for r in rounds]
-    peak = max((b for b in bsrs if b == b), default=float("nan"))  # ignore nan
+    bsrs = [r["bsr"] for r in rounds if r["bsr"] == r["bsr"]]
+    aggs = [r["agg"] for r in rounds if r["agg"] == r["agg"]]
     return {
-        "rounds": int(last[0]), "final_acc": f(last[1]), "final_bsr": f(last[2]),
-        "peak_bsr": peak, "final_auroc": f(last[3]), "final_tpr": f(last[4]),
+        "rounds": last["round"], "final_acc": last["acc"], "final_bsr": last["bsr"],
+        "peak_bsr": max(bsrs) if bsrs else float("nan"),
+        "final_auroc": last["auroc"], "final_tpr": last["tpr"],
+        "mean_agg_s": (sum(aggs) / len(aggs)) if aggs else float("nan"),
+        "total_agg_s": sum(aggs) if aggs else float("nan"),
     }
 
 
@@ -48,11 +58,12 @@ def main(root):
         rows.append({"dataset": ds, "attack": attack, "defense": defense, **rec})
     out = root / "summary.csv"
     cols = ["dataset", "attack", "defense", "rounds", "final_acc", "final_bsr",
-            "peak_bsr", "final_auroc", "final_tpr"]
+            "peak_bsr", "final_auroc", "final_tpr", "mean_agg_s", "total_agg_s"]
     with out.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=cols)
         w.writeheader()
-        w.writerows(rows)
+        for r in rows:
+            w.writerow({k: (f"{r[k]:.4f}" if isinstance(r[k], float) else r[k]) for k in cols})
     print(f"wrote {out} ({len(rows)} rows)")
 
 

@@ -152,6 +152,37 @@ w_flat = trust_weights(div_flat, mode="hard_gate", kappa=2.5, max_drop=4)
 check("hard_gate_softfallback_no_signal", (w_flat > 0).all(),
       f"dropped={int((w_flat==0).sum())} (expected 0)")
 
+# 7b. round_gate: clean round -> everyone uniform; attacked round -> drop flagged,
+#     survivors uniform (no divergence weighting)
+w_rg_clean = trust_weights(div_flat, mode="round_gate", kappa=2.5, max_drop=4)
+check("round_gate_clean_uniform_all",
+      (w_rg_clean > 0).all() and np.allclose(w_rg_clean, w_rg_clean[0]),
+      f"min={w_rg_clean.min():.4f} max={w_rg_clean.max():.4f}")
+div_atk = np.array([0.05] * 17 + [0.40, 0.45, 0.50])      # 3 clearly divergent
+w_rg = trust_weights(div_atk, mode="round_gate", kappa=2.5, max_drop=4)
+surv = w_rg[:17]
+check("round_gate_drops_and_uniform_survivors",
+      np.all(w_rg[-3:] == 0) and np.allclose(surv, surv[0]) and (surv > 0).all(),
+      f"dropped={int((w_rg==0).sum())} survivors_equal={np.allclose(surv,surv[0])}")
+
+# 7c. round_zoned: clean round -> uniform all; attacked round -> safe=uniform,
+#     gray=soft ramp (strictly between 0 and 1), bad=hard reject
+w_rz_clean = trust_weights(div_flat, mode="round_zoned", kappa=2.5, kappa_safe=1.0, max_drop=4)
+check("round_zoned_clean_uniform_all",
+      (w_rz_clean > 0).all() and np.allclose(w_rz_clean, w_rz_clean[0]), "")
+# spread honest cluster (safe, uniform) + one mid client (gray, partial) + clear bad.
+# NB: the gray zone only exists when the honest cluster has real spread (MAD>0); a
+# tight majority makes MAD->0, z explodes, and the gray band collapses.
+div_z = np.array([0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14]
+                 + [0.22] + [0.60, 0.70, 0.80])
+w_rz = trust_weights(div_z, mode="round_zoned", kappa=2.5, kappa_safe=1.0, max_drop=4)
+mx = w_rz.max()
+safe_eq = np.isclose(w_rz[:11], mx).all()                # honest cluster all full+equal
+gray_mid = 0.0 < w_rz[11] < mx                           # one partial
+bad_zero = np.all(w_rz[-3:] == 0)                        # clearly-bad rejected
+check("round_zoned_three_zones", safe_eq and gray_mid and bad_zero,
+      f"safe_uniform={safe_eq} gray={w_rz[11]:.3f} bad_zero={bad_zero}")
+
 # 8. build_probe strategies (torch) activate the probe; clean is a no-op
 try:
     import torch

@@ -127,17 +127,27 @@ def run(cfg: dict):
         if probe_strategy == "candidate" and probe_refresh > 0 and rnd % probe_refresh == 1 and rnd > 1:
             probe_x = _make_probe(global_params)
         sel = rng.choice(cfg["num_clients"], size=cfg["clients_per_round"], replace=False)
-        benign_updates, mal_ids, all_meta = [], [], []
+
+        # ---- intermittent attack: each malicious client attacks this round with
+        # probability attack_prob (1.0 = always-on, reproduces prior behavior). On a
+        # resting round it trains honestly, so its update is genuinely useful. The
+        # per-round "attacking" set is also the detection ground truth (we WANT to
+        # use a resting attacker), and the reference set for lie/min_max crafting.
+        attack_prob = float(cfg.get("attack_prob", 1.0))
+        if attack_prob >= 1.0:
+            attacking = {int(c) for c in sel if c in malicious}
+        else:
+            attacking = {int(c) for c in sel if c in malicious and rng.random() < attack_prob}
 
         # ---- benign training (and data-poisoning malicious) ----
-        deltas, ids, is_mal = [], [], []
+        deltas, ids, is_mal, is_atk = [], [], [], []
         for cid in sel:
             idx = parts[cid]
             Xc, yc = Xtr[idx], ytr[idx]
             m = build_model(cfg["model"], **mkw); set_params(m, global_params)
             # data-space poisoning (constrained_backdoor/adaptive_ecf also train a
             # BadNets backdoor here; their update-space stealth projection follows)
-            if cid in malicious and cfg["attack"] in DATA_ATTACKS:
+            if cid in attacking and cfg["attack"] in DATA_ATTACKS:
                 if cfg["attack"] == "label_flip":
                     yc = label_flip(yc, meta.num_classes, seed=cfg["seed"] + cid)
                 elif cfg["attack"] == "spurious_feature":
@@ -166,13 +176,15 @@ def run(cfg: dict):
             new_p = local_train(m, _loader(Xc, yc, cfg["batch_size"]),
                                 epochs=cfg["local_epochs"], lr=cfg["lr"], device=dev)
             delta = [n - g for n, g in zip(new_p, global_params)]
-            deltas.append(delta); ids.append(int(cid)); is_mal.append(cid in malicious)
+            deltas.append(delta); ids.append(int(cid))
+            is_mal.append(cid in malicious); is_atk.append(cid in attacking)
 
-        # ---- update-space attacks (overwrite malicious deltas) ----
+        # ---- update-space attacks (overwrite attacking-this-round deltas) ----
+        # honest reference = clients NOT attacking this round (incl. resting attackers)
         if cfg["attack"] in UPDATE_ATTACKS:
-            benign_deltas = [d for d, mflag in zip(deltas, is_mal) if not mflag]
-            for k, mflag in enumerate(is_mal):
-                if not mflag:
+            benign_deltas = [d for d, a in zip(deltas, is_atk) if not a]
+            for k, a in enumerate(is_atk):
+                if not a:
                     continue
                 if cfg["attack"] == "sign_flip":
                     deltas[k] = ua.sign_flip(deltas[k])
@@ -187,9 +199,9 @@ def run(cfg: dict):
         # (Scenario 1: pull into benign L2 ball; Scenario 3: also enforce a cosine
         # floor to the honest direction -> geometric insider, functional outlier)
         if cfg["attack"] in ("constrained_backdoor", "adaptive_ecf"):
-            benign_deltas = [d for d, mflag in zip(deltas, is_mal) if not mflag]
-            for k, mflag in enumerate(is_mal):
-                if not mflag:
+            benign_deltas = [d for d, a in zip(deltas, is_atk) if not a]
+            for k, a in enumerate(is_atk):
+                if not a:
                     continue
                 if cfg["attack"] == "constrained_backdoor":
                     deltas[k] = ua.constrain_to_benign(deltas[k], benign_deltas,
@@ -199,8 +211,9 @@ def run(cfg: dict):
                                                   eps_scale=cfg.get("eps_scale", 1.0),
                                                   cos_min=cfg.get("cos_min", 0.1))
 
-        updates = [ClientUpdate(cid=i, delta=d, num_examples=len(parts[i]), is_malicious=mf)
-                   for i, d, mf in zip(ids, deltas, is_mal)]
+        # detection ground truth = attacking THIS round (resting attackers count benign)
+        updates = [ClientUpdate(cid=i, delta=d, num_examples=len(parts[i]), is_malicious=a)
+                   for i, d, a in zip(ids, deltas, is_atk)]
 
         # ---- context for defenses that need it ----
         ctx = AggContext(global_params=global_params)

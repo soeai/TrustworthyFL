@@ -21,7 +21,11 @@ trigger_size: 3
 defense: ecf             # fedavg | trimmed_mean | median | multi_krum | fltrust | ecf
 defense_kw:
   tau: 0.5
-  mode: soft             # soft | hard | hard_gate
+  mode: soft             # soft | hard | hard_gate | round_gate
+                         # round_gate: round-level attack detection for intermittent
+                         #   attackers — clean round -> uniform-average everyone (uses
+                         #   resting attackers' honest updates); attacked round -> hard-
+                         #   drop suspicious + uniform survivors. Pairs with attack_prob.
   consensus: geomedian   # geomedian | coordmedian | mean
   norm_gate: true
   kappa: 2.5             # hard_gate: robust z-score gate; drop clients with z>kappa

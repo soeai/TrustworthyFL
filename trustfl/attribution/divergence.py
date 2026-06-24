@@ -48,7 +48,7 @@ def cosine_divergence(sig: np.ndarray, consensus: str = "geomedian",
 
 
 def trust_weights(div: np.ndarray, tau: float = 0.5, mode: str = "soft",
-                  beta: float = 2.0, kappa: float = 2.5,
+                  beta: float = 2.0, kappa: float = 2.5, kappa_safe: float = 1.0,
                   max_drop: int | None = None) -> np.ndarray:
     """Map divergences to non-negative, normalized trust weights.
 
@@ -82,6 +82,45 @@ def trust_weights(div: np.ndarray, tau: float = 0.5, mode: str = "soft",
             keep_mask[top] = True
             drop = drop & keep_mask
         w[drop] = 0.0
+    elif mode == "round_gate":
+        # Round-level gate for intermittent attacks: detect whether THIS round is
+        # under attack (any robust z-score > kappa). If not, average everyone
+        # uniformly -- this uses the honest updates of resting attackers, recovering
+        # accuracy. If yes, hard-drop the confidently-suspicious (capped) and average
+        # the survivors uniformly (no soft tax). Either branch weights by sample
+        # count downstream, never by divergence -> no penalty on honest heterogeneity.
+        med = np.median(div)
+        mad = np.median(np.abs(div - med)) + 1e-12
+        z = 0.6745 * (div - med) / mad
+        flagged = z > kappa
+        if max_drop is not None and flagged.sum() > max_drop:
+            top = np.argsort(z)[::-1][:max_drop]
+            keep_mask = np.zeros_like(flagged); keep_mask[top] = True
+            flagged = flagged & keep_mask
+        w = (~flagged).astype(np.float64) if flagged.any() else np.ones_like(div)
+    elif mode == "round_zoned":
+        # round_gate + three trust zones. Stage 0 (round level): if no client is a
+        # confident outlier (no z > kappa), the round is clean -> uniform-average
+        # everyone (uses resting attackers' honest updates; sidesteps the tiny-MAD
+        # trap). Stage 1 (attacked round): partition by robust z into
+        #   safe   (z <= kappa_safe)            -> uniform   (w=1, no honest tax)
+        #   gray   (kappa_safe < z <= kappa)    -> soft ramp 1->0 (cautious)
+        #   bad    (z > kappa, capped)          -> hard reject (w=0)
+        med = np.median(div)
+        mad = np.median(np.abs(div - med)) + 1e-12
+        z = 0.6745 * (div - med) / mad
+        flagged = z > kappa
+        if max_drop is not None and flagged.sum() > max_drop:
+            top = np.argsort(z)[::-1][:max_drop]
+            keep_mask = np.zeros_like(flagged); keep_mask[top] = True
+            flagged = flagged & keep_mask
+        if not flagged.any():                       # clean round -> uniform all
+            w = np.ones_like(div)
+        else:                                       # attacked round -> 3 zones
+            span = max(kappa - kappa_safe, 1e-12)
+            ramp = np.clip(1.0 - (z - kappa_safe) / span, 0.0, 1.0)  # 1 at safe edge -> 0 at kappa
+            w = np.where(z <= kappa_safe, 1.0, ramp)                 # safe=uniform, gray=ramp
+            w[flagged] = 0.0                                         # bad=hard reject
     else:
         raise ValueError(f"unknown mode '{mode}'")
     s = w.sum()
@@ -92,9 +131,10 @@ def trust_weights(div: np.ndarray, tau: float = 0.5, mode: str = "soft",
 
 def explanation_consistency(sig: np.ndarray, tau: float = 0.5, mode: str = "soft",
                             consensus: str = "geomedian", beta: float = 2.0,
-                            kappa: float = 2.5, max_drop: int | None = None):
+                            kappa: float = 2.5, kappa_safe: float = 1.0,
+                            max_drop: int | None = None):
     """Convenience wrapper returning (weights, divergences)."""
     div = cosine_divergence(sig, consensus=consensus)
     w = trust_weights(div, tau=tau, mode=mode, beta=beta,
-                      kappa=kappa, max_drop=max_drop)
+                      kappa=kappa, kappa_safe=kappa_safe, max_drop=max_drop)
     return w, div
