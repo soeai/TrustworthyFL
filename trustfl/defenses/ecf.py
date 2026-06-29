@@ -23,7 +23,7 @@ class ECF(Aggregator):
 
     def __init__(self, tau: float = 0.5, mode: str = "soft",
                  consensus: str = "geomedian", beta: float = 2.0,
-                 norm_gate: bool = True, kappa: float = 2.5, kappa_safe: float = 1.0,
+                 norm_gate: bool = False, kappa: float = 2.5, kappa_safe: float = 1.0,
                  num_malicious: int | None = None, score: str = "consistency"):
         self.tau = tau
         self.mode = mode

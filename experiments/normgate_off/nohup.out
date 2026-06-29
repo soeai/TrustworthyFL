@@ -1,0 +1,39 @@
+=== normgate_off start Wed Jun 24 09:45:58 UTC 2026 — 18 cells ===
+[09:45:58] g1 START label_flip/ecf_cand_nog
+[09:45:58] g0 START label_flip/ecf_base_nog
+[09:52:44] g1 DONE  label_flip/ecf_cand_nog -> round  60 | acc=0.8830 | bsr=nan | agg=0.40s | det_auroc=1.000 | tpr@5=1.00
+[09:52:44] g1 START backdoor/ecf_cand_nog
+[09:53:26] g0 DONE  label_flip/ecf_base_nog -> round  60 | acc=0.8839 | bsr=nan | agg=0.48s | det_auroc=1.000 | tpr@5=1.00
+[09:53:26] g0 START backdoor/ecf_base_nog
+[09:59:35] g1 DONE  backdoor/ecf_cand_nog -> round  60 | acc=0.8839 | bsr=0.019 | agg=0.39s | det_auroc=1.000 | tpr@5=1.00
+[09:59:35] g1 START spurious_feature/ecf_cand_nog
+[10:01:04] g0 DONE  backdoor/ecf_base_nog -> round  60 | acc=0.8880 | bsr=0.997 | agg=0.37s | det_auroc=0.531 | tpr@5=0.00
+[10:01:04] g0 START spurious_feature/ecf_base_nog
+[10:06:26] g1 DONE  spurious_feature/ecf_cand_nog -> round  60 | acc=0.8861 | bsr=nan | agg=0.39s | det_auroc=0.797 | tpr@5=0.25
+[10:06:26] g1 START constrained_backdoor/ecf_cand_nog
+[10:08:28] g0 DONE  spurious_feature/ecf_base_nog -> round  60 | acc=0.8871 | bsr=nan | agg=0.46s | det_auroc=0.641 | tpr@5=0.25
+[10:08:28] g0 START constrained_backdoor/ecf_base_nog
+[10:15:39] g1 DONE  constrained_backdoor/ecf_cand_nog -> round  60 | acc=0.8845 | bsr=0.028 | agg=0.38s | det_auroc=1.000 | tpr@5=1.00
+[10:15:39] g1 START adaptive_ecf/ecf_cand_nog
+[10:18:27] g0 DONE  constrained_backdoor/ecf_base_nog -> round  60 | acc=0.8879 | bsr=0.997 | agg=0.53s | det_auroc=0.500 | tpr@5=0.00
+[10:18:27] g0 START adaptive_ecf/ecf_base_nog
+[10:25:20] g1 DONE  adaptive_ecf/ecf_cand_nog -> round  60 | acc=0.8845 | bsr=0.032 | agg=0.48s | det_auroc=1.000 | tpr@5=1.00
+[10:25:20] g1 START sign_flip/ecf_cand_nog
+[10:28:37] g0 DONE  adaptive_ecf/ecf_base_nog -> round  60 | acc=0.8883 | bsr=0.986 | agg=0.40s | det_auroc=0.047 | tpr@5=0.00
+[10:28:37] g0 START sign_flip/ecf_base_nog
+[10:32:05] g1 DONE  sign_flip/ecf_cand_nog -> round  60 | acc=0.8309 | bsr=nan | agg=0.39s | det_auroc=0.828 | tpr@5=0.00
+[10:32:05] g1 START gaussian/ecf_cand_nog
+[10:35:18] g0 DONE  sign_flip/ecf_base_nog -> round  60 | acc=0.8418 | bsr=nan | agg=0.40s | det_auroc=0.969 | tpr@5=0.75
+[10:35:18] g0 START gaussian/ecf_base_nog
+[10:38:44] g1 DONE  gaussian/ecf_cand_nog -> round  60 | acc=0.8836 | bsr=nan | agg=0.10s | det_auroc=1.000 | tpr@5=1.00
+[10:38:44] g1 START lie/ecf_cand_nog
+[10:41:57] g0 DONE  gaussian/ecf_base_nog -> round  60 | acc=0.8843 | bsr=nan | agg=0.39s | det_auroc=1.000 | tpr@5=1.00
+[10:41:57] g0 START lie/ecf_base_nog
+[10:45:45] g1 DONE  lie/ecf_cand_nog -> round  60 | acc=0.8833 | bsr=nan | agg=0.11s | det_auroc=1.000 | tpr@5=1.00
+[10:45:45] g1 START min_max/ecf_cand_nog
+[10:49:00] g0 DONE  lie/ecf_base_nog -> round  60 | acc=0.8838 | bsr=nan | agg=0.42s | det_auroc=1.000 | tpr@5=1.00
+[10:49:00] g0 START min_max/ecf_base_nog
+[10:54:38] g1 DONE  min_max/ecf_cand_nog -> round  60 | acc=0.8850 | bsr=nan | agg=0.40s | det_auroc=1.000 | tpr@5=1.00
+[10:58:01] g0 DONE  min_max/ecf_base_nog -> round  60 | acc=0.8287 | bsr=nan | agg=0.39s | det_auroc=1.000 | tpr@5=1.00
+wrote experiments/normgate_off/summary.csv (18 rows)
+=== ALL DONE Wed Jun 24 10:58:02 UTC 2026 ===

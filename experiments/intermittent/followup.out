@@ -1,0 +1,15 @@
+=== round_zoned follow-up start Wed Jun 24 09:36:23 UTC 2026 ===
+[09:36:23] START p02/backdoor/ecf_cand_rz
+[09:43:27] DONE  p02/backdoor/ecf_cand_rz -> round  60 | acc=0.8193 | bsr=0.029 | agg=0.40s | det_auroc=0.722 | tpr@5=0.00
+[09:43:27] START p02/adaptive_ecf/ecf_cand_rz
+[09:51:41] DONE  p02/adaptive_ecf/ecf_cand_rz -> round  60 | acc=0.8199 | bsr=0.030 | agg=0.48s | det_auroc=0.778 | tpr@5=0.00
+[09:51:41] START p05/backdoor/ecf_cand_rz
+[09:59:26] DONE  p05/backdoor/ecf_cand_rz -> round  60 | acc=0.8158 | bsr=0.044 | agg=0.48s | det_auroc=1.000 | tpr@5=1.00
+[09:59:26] START p05/adaptive_ecf/ecf_cand_rz
+[10:08:44] DONE  p05/adaptive_ecf/ecf_cand_rz -> round  60 | acc=0.8164 | bsr=0.043 | agg=0.42s | det_auroc=1.000 | tpr@5=1.00
+[10:08:44] START p10/backdoor/ecf_cand_rz
+[10:16:28] DONE  p10/backdoor/ecf_cand_rz -> round  60 | acc=0.8084 | bsr=0.035 | agg=0.47s | det_auroc=1.000 | tpr@5=1.00
+[10:16:28] START p10/adaptive_ecf/ecf_cand_rz
+[10:26:39] DONE  p10/adaptive_ecf/ecf_cand_rz -> round  60 | acc=0.8085 | bsr=0.038 | agg=0.47s | det_auroc=1.000 | tpr@5=1.00
+wrote experiments/intermittent/summary.csv (30 rows)
+=== FOLLOWUP DONE Wed Jun 24 10:26:39 UTC 2026 ===

@@ -89,6 +89,22 @@ class TextEmbedMLP(nn.Module):
         return self.forward_from_embed(self.embed(ids))
 
 
+_ENCODER_CACHE = {}
+
+
+def _get_distilbert_encoder(pretrained: str):
+    """Load the (frozen) DistilBERT encoder once per process and share it across all
+    client models -- the encoder is identical and never federated, so reusing one
+    object avoids reloading 268MB on every build_model call and saves GPU memory."""
+    if pretrained not in _ENCODER_CACHE:
+        from transformers import DistilBertModel
+        enc = DistilBertModel.from_pretrained(pretrained)
+        for p in enc.parameters():
+            p.requires_grad_(False)
+        _ENCODER_CACHE[pretrained] = enc
+    return _ENCODER_CACHE[pretrained]
+
+
 class DistilBertClassifier(nn.Module):
     """Pretrained DistilBERT encoder (frozen) + a small trainable head, for IMDB.
 
@@ -103,12 +119,12 @@ class DistilBertClassifier(nn.Module):
     def __init__(self, num_classes: int = 2, pretrained: str = "distilbert-base-uncased",
                  pad_id: int = 0, freeze_encoder: bool = True):
         super().__init__()
-        from transformers import DistilBertModel
-        self.encoder = DistilBertModel.from_pretrained(pretrained)
+        # shared, cached, frozen encoder (see _get_distilbert_encoder)
+        self.encoder = _get_distilbert_encoder(pretrained) if freeze_encoder else None
+        if self.encoder is None:
+            from transformers import DistilBertModel
+            self.encoder = DistilBertModel.from_pretrained(pretrained)
         self.pad_id = pad_id
-        if freeze_encoder:
-            for p in self.encoder.parameters():
-                p.requires_grad_(False)
         h = self.encoder.config.dim
         self.pre = nn.Linear(h, h)
         self.classifier = nn.Linear(h, num_classes)

@@ -108,10 +108,19 @@ only with honest spread (MAD>0); a tight round degenerates to binary safe/bad.
 on a resting round its update is honest. Re-scoring every round (no blacklist) lets the
 clean-round branch reuse that data, recovering ACC without weakening attacked rounds.
 
-### 4.5 One line
+### 4.5 No norm gate (a deliberate non-component)
+Earlier robust-FL designs (incl. the original ECF) clip each update to a reference
+norm to blunt large-magnitude attacks. **The proposed method does not** — clipping in
+parameter space *hides* the anomaly from the function-space detector and taxes honest
+clients. On un-clipped updates a large-norm attack is highly divergent, so the hard
+gate (§4.2) rejects it directly. Ablation (§7) shows removing the gate strictly
+dominates: +clean ACC (to Multi-Krum level) and higher detection AUROC on *every*
+attack. The design therefore operates on raw updates.
+
+### 4.6 One line
 > **Activated-probe (candidate+refresh) explanation-divergence scoring → confidence-
-> zoned, stateless trust aggregation (`round_zoned`)**; for text the DistilBERT encoder
-> is frozen and only a head is federated.
+> zoned, stateless trust aggregation (`round_zoned`), on raw (un-norm-gated)
+> updates**; for text the DistilBERT encoder is frozen and only a head is federated.
 
 ---
 
@@ -149,6 +158,7 @@ IMDB: DistilBERT (frozen)+head, 30 rounds. **Attacks (9):** the standard familie
 **Defenses:** baselines `fedavg/median/trimmed_mean/multi_krum/fltrust`; ECF variants
 `ecf_base` (clean+soft), `ecf_cand` (candidate+refresh+hard_gate), `ecf_zoned`
 (candidate+refresh+round_zoned), `ecf_bdoor` (backdoorability). Metrics in §1.
+**All ECF configs run with `norm_gate=off`** (the default; see §4.5 and the §6.4 ablation).
 
 **6.2 Motivation experiment.** ASB vs. parameter-space signals — the §3 table; full
 grid in `experiments/fmnist_r500/summary.csv`.
@@ -157,14 +167,16 @@ grid in `experiments/fmnist_r500/summary.csv`.
 
 | Configuration | BSR | det. AUROC | ACC | agg s/round |
 |---|---|---|---|---|
-| ECF clean + soft (no activated probe, no gate) | 0.39 | 0.33 | 0.81 | 0.15 |
-| **ECF candidate+refresh + hard_gate (ours)** | **0.04** | **1.00** | 0.81 | 0.15 |
-| ECF candidate+refresh + round_zoned (acc-refined) | see §6.4 | – | – | 0.15 |
+| ECF clean + soft (no activated probe, norm_gate ON) | 0.39 | 0.33 | 0.81 | 0.15 |
+| ECF candidate+refresh + hard_gate, **norm_gate ON** | 0.04 | 1.00 | 0.81 | 0.15 |
+| **ECF candidate+refresh + hard_gate, norm_gate OFF (ours)** | **0.03** | **1.00** | **0.88** | 0.15 |
 
 The activated probe restores detectability (AUROC 0.33→1.0) and the gate converts it to
-suppression (BSR 0.39→0.04), at the same cost. `round_zoned` adds the honest-uniform /
-intermittent benefit (§6.4). Full attack×defense grids (BSR/AUROC/ACC/agg-time) in
-`experiments/fmnist_r500/` (image, root=500) and `experiments/real_full/` (image+text).
+suppression (BSR→0.03–0.04); **dropping the norm gate then closes the accuracy gap to
+Multi-Krum (0.81→0.88) while keeping detection at 1.0** (§6.4). `round_zoned` adds the
+honest-uniform / intermittent benefit (§6.4). Full attack×defense grids
+(BSR/AUROC/ACC/agg-time) in `experiments/fmnist_r500/` (norm_gate ON),
+`experiments/normgate_off/` (norm_gate OFF), `experiments/real_full/` (image+text).
 
 **6.4 Ablations** — see §7 matrix. Key in-progress study: **intermittent** ASB
 (`attack_prob∈{0.2,0.5,1.0}`), comparing `hard_gate` (soft survivors) vs `round_gate`
@@ -184,11 +196,21 @@ confirming the underfit is an encoder-capacity issue, not a task limit.
 | Probe strategy | clean · oracle · **candidate(+refresh)** · perturb | does activation restore the signal; is knowledge-free recovery ≈ oracle |
 | Candidate refresh | once-frozen · **K=5** | does re-recovery prevent detection decay |
 | Aggregation mode | soft · hard_gate · round_gate · **round_zoned** | reject vs dilute; uniform vs soft survivors; gray band value |
+| **Norm gate** | on · **off (default)** | does clipping to the reference norm help? — **no, dropped** (see below) |
 | Score signal | **consistency** · backdoorability | consensus divergence vs per-client recovery (≈17× cost) |
 | Root size | 100 · **500** | reference quality; gain largest where base detector is weakest |
 | Attack temporality | **continuous** · intermittent | does stateless `round_zoned` reuse resting rounds for ACC |
 | Gate thresholds | κ, κ_safe | zone-boundary sensitivity |
 | Modality / encoder | image · text (**DistilBERT** vs TextEmbedMLP) | transfer; pretrained encoder removes underfit |
+
+**Norm gate — dropped from the design.** The original ECF clipped every update to the
+reference-update norm. Ablation (fmnist, root=500, ecf_cand) shows the gate is
+*strictly dominated*: turning it OFF (i) raises clean ACC 0.808→**0.884** (= Multi-Krum),
+and (ii) **improves detection AUROC on all 9 attacks** — dramatically on norm-large
+attacks (gaussian 0.10→1.00, min_max 0.69→1.00), because clipping hides the very
+anomaly the detector needs; on un-clipped updates a large-norm attack becomes highly
+divergent and `hard_gate` rejects it. The gate is therefore removed from the proposed
+method (flag retained only for this ablation). BSR is unchanged-or-better (0.04→0.02–0.03).
 
 ---
 

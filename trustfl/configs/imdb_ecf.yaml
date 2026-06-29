@@ -31,7 +31,7 @@ defense_kw:
   tau: 0.5
   mode: soft
   consensus: geomedian
-  norm_gate: true
+  norm_gate: false       # dropped from the design (hurts accuracy and detection)
 
 # ECF attribution (per-token saliency over embeddings)
 attribution: grad_x_input   # grad_x_input | integrated_gradients | gradient_shap

@@ -27,7 +27,10 @@ defense_kw:
                          #   resting attackers' honest updates); attacked round -> hard-
                          #   drop suspicious + uniform survivors. Pairs with attack_prob.
   consensus: geomedian   # geomedian | coordmedian | mean
-  norm_gate: true
+  norm_gate: false       # DROPPED from the design (ablation kept): clipping to the
+                         #   reference norm both costs ~7pt accuracy AND hides anomalies
+                         #   (esp. noise attacks) from the detector. hard_gate on
+                         #   un-clipped updates catches large-norm attacks better.
   kappa: 2.5             # hard_gate: robust z-score gate; drop clients with z>kappa
                          #            (capped at num_malicious) -> reject only when
                          #            detection confidence is large, else stay soft

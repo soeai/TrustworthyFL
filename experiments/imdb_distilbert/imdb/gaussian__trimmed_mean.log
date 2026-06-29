@@ -1,0 +1,34 @@
+Some weights of the model checkpoint at distilbert-base-uncased were not used when initializing DistilBertModel: ['vocab_transform.weight', 'vocab_layer_norm.bias', 'vocab_transform.bias', 'vocab_layer_norm.weight', 'vocab_projector.bias']
+- This IS expected if you are initializing DistilBertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing DistilBertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+device=cuda dataset=imdb(real) clients=20 malicious=4 defense=trimmed_mean attack=gaussian
+round   1 | acc=0.5028 | bsr=nan | agg=0.26s
+round   2 | acc=0.6795 | bsr=nan | agg=0.26s
+round   3 | acc=0.5105 | bsr=nan | agg=0.26s
+round   4 | acc=0.5195 | bsr=nan | agg=0.26s
+round   5 | acc=0.5047 | bsr=nan | agg=0.26s
+round   6 | acc=0.5232 | bsr=nan | agg=0.26s
+round   7 | acc=0.5020 | bsr=nan | agg=0.25s
+round   8 | acc=0.6732 | bsr=nan | agg=0.26s
+round   9 | acc=0.5161 | bsr=nan | agg=0.25s
+round  10 | acc=0.7798 | bsr=nan | agg=0.26s
+round  11 | acc=0.6100 | bsr=nan | agg=0.25s
+round  12 | acc=0.7865 | bsr=nan | agg=0.26s
+round  13 | acc=0.6241 | bsr=nan | agg=0.26s
+round  14 | acc=0.7908 | bsr=nan | agg=0.25s
+round  15 | acc=0.5915 | bsr=nan | agg=0.25s
+round  16 | acc=0.7915 | bsr=nan | agg=0.26s
+round  17 | acc=0.5802 | bsr=nan | agg=0.25s
+round  18 | acc=0.7810 | bsr=nan | agg=0.26s
+round  19 | acc=0.5742 | bsr=nan | agg=0.25s
+round  20 | acc=0.7922 | bsr=nan | agg=0.26s
+round  21 | acc=0.6235 | bsr=nan | agg=0.26s
+round  22 | acc=0.7944 | bsr=nan | agg=0.25s
+round  23 | acc=0.6148 | bsr=nan | agg=0.25s
+round  24 | acc=0.7968 | bsr=nan | agg=0.25s
+round  25 | acc=0.6545 | bsr=nan | agg=0.26s
+round  26 | acc=0.7964 | bsr=nan | agg=0.26s
+round  27 | acc=0.6454 | bsr=nan | agg=0.25s
+round  28 | acc=0.7956 | bsr=nan | agg=0.26s
+round  29 | acc=0.6678 | bsr=nan | agg=0.25s
+round  30 | acc=0.7929 | bsr=nan | agg=0.26s

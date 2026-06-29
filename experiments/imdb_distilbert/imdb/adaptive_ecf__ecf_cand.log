@@ -1,0 +1,34 @@
+Some weights of the model checkpoint at distilbert-base-uncased were not used when initializing DistilBertModel: ['vocab_layer_norm.weight', 'vocab_transform.weight', 'vocab_transform.bias', 'vocab_projector.bias', 'vocab_layer_norm.bias']
+- This IS expected if you are initializing DistilBertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing DistilBertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+device=cuda dataset=imdb(real) clients=20 malicious=4 defense=ecf attack=adaptive_ecf
+round   1 | acc=0.5854 | bsr=0.051 | agg=2.88s | det_auroc=0.500 | tpr@5=0.00
+round   2 | acc=0.6995 | bsr=0.108 | agg=2.89s | det_auroc=0.422 | tpr@5=0.00
+round   3 | acc=0.7313 | bsr=0.135 | agg=2.88s | det_auroc=0.438 | tpr@5=0.00
+round   4 | acc=0.7366 | bsr=0.132 | agg=2.88s | det_auroc=0.375 | tpr@5=0.00
+round   5 | acc=0.7432 | bsr=0.136 | agg=2.88s | det_auroc=0.375 | tpr@5=0.00
+round   6 | acc=0.7382 | bsr=0.121 | agg=2.88s | det_auroc=0.391 | tpr@5=0.00
+round   7 | acc=0.7367 | bsr=0.110 | agg=2.87s | det_auroc=0.422 | tpr@5=0.00
+round   8 | acc=0.7420 | bsr=0.116 | agg=2.87s | det_auroc=0.438 | tpr@5=0.00
+round   9 | acc=0.7406 | bsr=0.106 | agg=2.87s | det_auroc=0.438 | tpr@5=0.00
+round  10 | acc=0.7334 | bsr=0.094 | agg=2.87s | det_auroc=0.438 | tpr@5=0.00
+round  11 | acc=0.7292 | bsr=0.084 | agg=2.87s | det_auroc=0.438 | tpr@5=0.00
+round  12 | acc=0.7214 | bsr=0.072 | agg=2.87s | det_auroc=0.531 | tpr@5=0.00
+round  13 | acc=0.7194 | bsr=0.069 | agg=2.87s | det_auroc=0.500 | tpr@5=0.00
+round  14 | acc=0.7227 | bsr=0.070 | agg=2.88s | det_auroc=0.484 | tpr@5=0.00
+round  15 | acc=0.7268 | bsr=0.074 | agg=2.87s | det_auroc=0.531 | tpr@5=0.00
+round  16 | acc=0.7210 | bsr=0.067 | agg=2.87s | det_auroc=0.547 | tpr@5=0.00
+round  17 | acc=0.7164 | bsr=0.060 | agg=2.88s | det_auroc=0.562 | tpr@5=0.00
+round  18 | acc=0.7292 | bsr=0.071 | agg=2.87s | det_auroc=0.516 | tpr@5=0.00
+round  19 | acc=0.7357 | bsr=0.078 | agg=2.87s | det_auroc=0.547 | tpr@5=0.00
+round  20 | acc=0.7426 | bsr=0.084 | agg=2.88s | det_auroc=0.484 | tpr@5=0.00
+round  21 | acc=0.7448 | bsr=0.085 | agg=2.87s | det_auroc=0.516 | tpr@5=0.00
+round  22 | acc=0.7829 | bsr=0.167 | agg=2.87s | det_auroc=0.484 | tpr@5=0.00
+round  23 | acc=0.7857 | bsr=0.171 | agg=2.87s | det_auroc=0.438 | tpr@5=0.00
+round  24 | acc=0.7824 | bsr=0.154 | agg=2.88s | det_auroc=0.438 | tpr@5=0.00
+round  25 | acc=0.7754 | bsr=0.132 | agg=2.88s | det_auroc=0.438 | tpr@5=0.00
+round  26 | acc=0.7756 | bsr=0.130 | agg=2.88s | det_auroc=0.500 | tpr@5=0.00
+round  27 | acc=0.7731 | bsr=0.122 | agg=2.87s | det_auroc=0.453 | tpr@5=0.00
+round  28 | acc=0.7703 | bsr=0.114 | agg=2.87s | det_auroc=0.453 | tpr@5=0.00
+round  29 | acc=0.7696 | bsr=0.113 | agg=2.88s | det_auroc=0.500 | tpr@5=0.00
+round  30 | acc=0.7740 | bsr=0.120 | agg=2.87s | det_auroc=0.500 | tpr@5=0.00

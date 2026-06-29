@@ -1,0 +1,130 @@
+=== imdb-distilbert (2-GPU) start Wed Jun 24 05:17:28 UTC 2026 — 63 cells ===
+[05:17:28] g0 START label_flip/fedavg
+[05:17:28] g1 START label_flip/median
+[05:44:44] g1 DONE  label_flip/median -> round  30 | acc=0.7024 | bsr=nan | agg=0.25s
+[05:44:44] g1 START label_flip/multi_krum
+[05:49:30] g0 DONE  label_flip/fedavg -> round  30 | acc=0.7504 | bsr=nan | agg=0.01s
+[05:49:30] g0 START label_flip/trimmed_mean
+[06:12:31] g1 DONE  label_flip/multi_krum -> round  30 | acc=0.6656 | bsr=nan | agg=1.23s | det_auroc=0.688 | tpr@5=0.00
+[06:12:31] g1 START label_flip/ecf_base
+[06:17:42] g0 DONE  label_flip/trimmed_mean -> round  30 | acc=0.7155 | bsr=nan | agg=0.25s
+[06:17:42] g0 START label_flip/fltrust
+[06:41:23] g1 DONE  label_flip/ecf_base -> round  30 | acc=0.6704 | bsr=nan | agg=2.85s | det_auroc=0.703 | tpr@5=0.00
+[06:41:23] g1 START backdoor/fedavg
+[06:45:36] g0 DONE  label_flip/fltrust -> round  30 | acc=0.7950 | bsr=nan | agg=0.04s | det_auroc=0.750 | tpr@5=0.00
+[06:45:36] g0 START label_flip/ecf_cand
+[07:14:56] g0 DONE  label_flip/ecf_cand -> round  30 | acc=0.6640 | bsr=nan | agg=2.89s | det_auroc=0.734 | tpr@5=0.00
+[07:14:56] g0 START backdoor/median
+[07:15:12] g1 DONE  backdoor/fedavg -> round  30 | acc=0.5000 | bsr=1.000 | agg=0.01s
+[07:15:12] g1 START backdoor/trimmed_mean
+[07:49:06] g1 DONE  backdoor/trimmed_mean -> round  30 | acc=0.8005 | bsr=0.267 | agg=0.25s
+[07:49:06] g1 START backdoor/fltrust
+[07:49:24] g0 DONE  backdoor/median -> round  30 | acc=0.7986 | bsr=0.284 | agg=0.25s
+[07:49:24] g0 START backdoor/multi_krum
+[08:23:12] g1 DONE  backdoor/fltrust -> round  30 | acc=0.7123 | bsr=0.574 | agg=0.04s | det_auroc=0.344 | tpr@5=0.00
+[08:23:12] g1 START backdoor/ecf_cand
+[08:24:19] g0 DONE  backdoor/multi_krum -> round  30 | acc=0.8006 | bsr=0.185 | agg=1.11s | det_auroc=0.359 | tpr@5=0.00
+[08:24:19] g0 START backdoor/ecf_base
+[08:58:44] g1 DONE  backdoor/ecf_cand -> round  30 | acc=0.7743 | bsr=0.122 | agg=2.86s | det_auroc=0.484 | tpr@5=0.00
+[08:58:44] g1 START spurious_feature/median
+[09:00:30] g0 DONE  backdoor/ecf_base -> round  30 | acc=0.7774 | bsr=0.122 | agg=2.90s | det_auroc=0.469 | tpr@5=0.00
+[09:00:30] g0 START spurious_feature/fedavg
+[09:26:02] g1 DONE  spurious_feature/median -> round  30 | acc=0.7968 | bsr=nan | agg=0.25s
+[09:26:02] g1 START spurious_feature/multi_krum
+[09:28:10] g0 DONE  spurious_feature/fedavg -> round  30 | acc=0.6445 | bsr=nan | agg=0.01s
+[09:28:10] g0 START spurious_feature/trimmed_mean
+[09:55:26] g1 DONE  spurious_feature/multi_krum -> round  30 | acc=0.7934 | bsr=nan | agg=1.20s | det_auroc=0.422 | tpr@5=0.00
+[09:55:26] g1 START spurious_feature/ecf_base
+[10:01:56] g0 DONE  spurious_feature/trimmed_mean -> round  30 | acc=0.7988 | bsr=nan | agg=0.32s
+[10:01:56] g0 START spurious_feature/fltrust
+[10:29:33] g1 DONE  spurious_feature/ecf_base -> round  30 | acc=0.7722 | bsr=nan | agg=3.49s | det_auroc=0.438 | tpr@5=0.00
+[10:29:33] g1 START constrained_backdoor/fedavg
+[10:37:50] g0 DONE  spurious_feature/fltrust -> round  30 | acc=0.7839 | bsr=nan | agg=0.10s | det_auroc=0.828 | tpr@5=0.00
+[10:37:51] g0 START spurious_feature/ecf_cand
+[11:08:46] g1 DONE  constrained_backdoor/fedavg -> round  30 | acc=0.5000 | bsr=1.000 | agg=0.01s
+[11:08:46] g1 START constrained_backdoor/trimmed_mean
+[11:10:27] g0 DONE  spurious_feature/ecf_cand -> round  30 | acc=0.7698 | bsr=nan | agg=2.89s | det_auroc=0.328 | tpr@5=0.00
+[11:10:27] g0 START constrained_backdoor/median
+[11:44:12] g1 DONE  constrained_backdoor/trimmed_mean -> round  30 | acc=0.8005 | bsr=0.267 | agg=0.28s
+[11:44:12] g1 START constrained_backdoor/fltrust
+[11:46:28] g0 DONE  constrained_backdoor/median -> round  30 | acc=0.7986 | bsr=0.284 | agg=0.27s
+[11:46:28] g0 START constrained_backdoor/multi_krum
+[12:19:49] g1 DONE  constrained_backdoor/fltrust -> round  30 | acc=0.7123 | bsr=0.574 | agg=0.04s | det_auroc=0.344 | tpr@5=0.00
+[12:19:49] g1 START constrained_backdoor/ecf_cand
+[12:22:55] g0 DONE  constrained_backdoor/multi_krum -> round  30 | acc=0.8006 | bsr=0.185 | agg=1.18s | det_auroc=0.359 | tpr@5=0.00
+[12:22:55] g0 START constrained_backdoor/ecf_base
+[12:56:47] g1 DONE  constrained_backdoor/ecf_cand -> round  30 | acc=0.7743 | bsr=0.122 | agg=2.83s | det_auroc=0.484 | tpr@5=0.00
+[12:56:47] g1 START adaptive_ecf/median
+[13:00:30] g0 DONE  constrained_backdoor/ecf_base -> round  30 | acc=0.7774 | bsr=0.122 | agg=2.87s | det_auroc=0.469 | tpr@5=0.00
+[13:00:30] g0 START adaptive_ecf/fedavg
+[13:32:20] g1 DONE  adaptive_ecf/median -> round  30 | acc=0.8004 | bsr=0.199 | agg=0.27s
+[13:32:20] g1 START adaptive_ecf/multi_krum
+[13:36:24] g0 DONE  adaptive_ecf/fedavg -> round  30 | acc=0.5000 | bsr=1.000 | agg=0.01s
+[13:36:24] g0 START adaptive_ecf/trimmed_mean
+[14:08:16] g1 DONE  adaptive_ecf/multi_krum -> round  30 | acc=0.7478 | bsr=0.497 | agg=1.18s | det_auroc=0.609 | tpr@5=0.00
+[14:08:16] g1 START adaptive_ecf/ecf_base
+[14:12:28] g0 DONE  adaptive_ecf/trimmed_mean -> round  30 | acc=0.7482 | bsr=0.082 | agg=0.27s
+[14:12:28] g0 START adaptive_ecf/fltrust
+[14:45:22] g1 DONE  adaptive_ecf/ecf_base -> round  30 | acc=0.7788 | bsr=0.124 | agg=2.83s | det_auroc=0.469 | tpr@5=0.00
+[14:45:22] g1 START sign_flip/fedavg
+[14:48:45] g0 DONE  adaptive_ecf/fltrust -> round  30 | acc=0.7403 | bsr=0.510 | agg=0.04s | det_auroc=0.312 | tpr@5=0.00
+[14:48:45] g0 START adaptive_ecf/ecf_cand
+[15:12:32] g1 DONE  sign_flip/fedavg -> round  30 | acc=0.7801 | bsr=nan | agg=0.01s
+[15:12:32] g1 START sign_flip/trimmed_mean
+[15:26:23] g0 DONE  adaptive_ecf/ecf_cand -> round  30 | acc=0.7740 | bsr=0.120 | agg=2.87s | det_auroc=0.500 | tpr@5=0.00
+[15:26:23] g0 START sign_flip/median
+[15:39:48] g1 DONE  sign_flip/trimmed_mean -> round  30 | acc=0.6923 | bsr=nan | agg=0.25s
+[15:39:48] g1 START sign_flip/fltrust
+[15:54:07] g0 DONE  sign_flip/median -> round  30 | acc=0.6322 | bsr=nan | agg=0.24s
+[15:54:07] g0 START sign_flip/multi_krum
+[16:07:15] g1 DONE  sign_flip/fltrust -> round  30 | acc=0.7933 | bsr=nan | agg=0.05s | det_auroc=0.688 | tpr@5=0.00
+[16:07:15] g1 START sign_flip/ecf_cand
+[16:22:18] g0 DONE  sign_flip/multi_krum -> round  30 | acc=0.6422 | bsr=nan | agg=1.18s | det_auroc=0.641 | tpr@5=0.25
+[16:22:18] g0 START sign_flip/ecf_base
+[16:36:06] g1 DONE  sign_flip/ecf_cand -> round  30 | acc=0.6804 | bsr=nan | agg=2.86s | det_auroc=0.906 | tpr@5=0.00
+[16:36:06] g1 START gaussian/median
+[16:51:37] g0 DONE  sign_flip/ecf_base -> round  30 | acc=0.6810 | bsr=nan | agg=2.90s | det_auroc=0.859 | tpr@5=0.00
+[16:51:37] g0 START gaussian/fedavg
+[17:03:24] g1 DONE  gaussian/median -> round  30 | acc=0.7808 | bsr=nan | agg=0.26s
+[17:03:24] g1 START gaussian/multi_krum
+[17:19:12] g0 DONE  gaussian/fedavg -> round  30 | acc=0.6703 | bsr=nan | agg=0.01s
+[17:19:12] g0 START gaussian/trimmed_mean
+[17:31:10] g1 DONE  gaussian/multi_krum -> round  30 | acc=0.5005 | bsr=nan | agg=1.18s | det_auroc=1.000 | tpr@5=1.00
+[17:31:10] g1 START gaussian/ecf_base
+[17:46:56] g0 DONE  gaussian/trimmed_mean -> round  30 | acc=0.7929 | bsr=nan | agg=0.26s
+[17:46:56] g0 START gaussian/fltrust
+[18:00:03] g1 DONE  gaussian/ecf_base -> round  30 | acc=0.7014 | bsr=nan | agg=2.85s | det_auroc=0.000 | tpr@5=0.00
+[18:00:03] g1 START lie/fedavg
+[18:14:50] g0 DONE  gaussian/fltrust -> round  30 | acc=0.7914 | bsr=nan | agg=0.04s | det_auroc=0.625 | tpr@5=0.00
+[18:14:50] g0 START gaussian/ecf_cand
+[18:27:27] g1 DONE  lie/fedavg -> round  30 | acc=0.5000 | bsr=nan | agg=0.01s
+[18:27:27] g1 START lie/trimmed_mean
+[18:44:10] g0 DONE  gaussian/ecf_cand -> round  30 | acc=0.7174 | bsr=nan | agg=2.88s | det_auroc=0.000 | tpr@5=0.00
+[18:44:10] g0 START lie/median
+[18:54:58] g1 DONE  lie/trimmed_mean -> round  30 | acc=0.7913 | bsr=nan | agg=0.25s
+[18:54:58] g1 START lie/fltrust
+[19:12:06] g0 DONE  lie/median -> round  30 | acc=0.7645 | bsr=nan | agg=0.25s
+[19:12:06] g0 START lie/multi_krum
+[19:22:40] g1 DONE  lie/fltrust -> round  30 | acc=0.7878 | bsr=nan | agg=0.04s | det_auroc=0.500 | tpr@5=0.00
+[19:22:40] g1 START lie/ecf_cand
+[19:40:30] g0 DONE  lie/multi_krum -> round  30 | acc=0.7408 | bsr=nan | agg=1.18s | det_auroc=0.812 | tpr@5=0.00
+[19:40:30] g0 START lie/ecf_base
+[19:51:45] g1 DONE  lie/ecf_cand -> round  30 | acc=0.7197 | bsr=nan | agg=2.85s | det_auroc=0.000 | tpr@5=0.00
+[19:51:45] g1 START min_max/median
+[20:10:03] g0 DONE  lie/ecf_base -> round  30 | acc=0.7159 | bsr=nan | agg=2.90s | det_auroc=0.000 | tpr@5=0.00
+[20:10:03] g0 START min_max/fedavg
+[20:20:33] g1 DONE  min_max/median -> round  30 | acc=0.6008 | bsr=nan | agg=0.26s
+[20:20:33] g1 START min_max/multi_krum
+[20:39:10] g0 DONE  min_max/fedavg -> round  30 | acc=0.5000 | bsr=nan | agg=0.01s
+[20:39:10] g0 START min_max/trimmed_mean
+[20:49:50] g1 DONE  min_max/multi_krum -> round  30 | acc=0.5005 | bsr=nan | agg=1.18s | det_auroc=1.000 | tpr@5=1.00
+[20:49:50] g1 START min_max/ecf_base
+[21:08:23] g0 DONE  min_max/trimmed_mean -> round  30 | acc=0.6865 | bsr=nan | agg=0.26s
+[21:08:23] g0 START min_max/fltrust
+[21:20:13] g1 DONE  min_max/ecf_base -> round  30 | acc=0.6727 | bsr=nan | agg=2.85s | det_auroc=0.750 | tpr@5=0.00
+[21:37:42] g0 DONE  min_max/fltrust -> round  30 | acc=0.7862 | bsr=nan | agg=0.04s | det_auroc=0.500 | tpr@5=0.00
+[21:37:42] g0 START min_max/ecf_cand
+[22:08:21] g0 DONE  min_max/ecf_cand -> round  30 | acc=0.6604 | bsr=nan | agg=2.87s | det_auroc=0.875 | tpr@5=0.00
+=== parsing ===
+wrote experiments/imdb_distilbert/summary.csv (63 rows)
+=== ALL DONE Wed Jun 24 22:08:21 UTC 2026 ===
