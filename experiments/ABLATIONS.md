@@ -23,15 +23,17 @@ results land in `experiments/ablations/<axis>/<attack>__<value>.log` and
 | A7 | **Attack temporality** | **continuous** · intermittent `attack_prob ∈ {0.2,0.5,1.0}` | does stateless per-round scoring reuse resting-attacker rounds; how does Krum degrade with attack frequency | `experiments/intermittent/` |
 | A8a | **Gate threshold κ** | `1.5 · 2.0 · 2.5 · 3.0 · 3.5` | sensitivity of the hard-reject confidence gate (false-positive vs leakage) | `experiments/ablations/kappa/` *(run)* |
 | A8b | **Safe-zone edge κ_safe** | `0.5 · 1.0 · 1.5 · 2.0` | width of the `round_zoned` gray band (gray leakage vs honest tax) | `experiments/ablations/kappa_safe/` *(run)* |
-| A9 | **Norm gate** | `on` · **`off`** | does clipping to the reference norm help? — no: it hurts both accuracy and detection | `experiments/fmnist_r500/` (on) vs `experiments/normgate_off/` (off) |
+| A9 | **Number of attackers `f`** | `2 · 4 · 6 · 8 · 10` (of 20, i.e. 10–50%) | how each defense degrades as the malicious fraction grows, and where each breaks | `experiments/ablations/n_attackers/` *(run)* |
 | A10 | **Modality / text encoder** | image (SmallCNN) · text (**DistilBERT** frozen+head vs from-scratch TextEmbedMLP) | transfer across modalities; does a pretrained encoder remove the text underfit | `experiments/imdb_distilbert/` (DistilBERT) vs the earlier TextEmbedMLP run |
 
 ## Commands (the not-yet-covered axes A2/A3/A8)
 
 ```bash
-# all of A2, A3, A8a, A8b in one resumable 2-GPU sweep:
-setsid nohup bash experiments/run_ablations.sh \
-  > experiments/ablations/nohup.out 2>&1 &
+# A2, A3, A8a, A8b in one resumable 2-GPU sweep:
+setsid nohup bash experiments/run_ablations.sh > experiments/ablations/nohup.out 2>&1 &
+# A9 — number of attackers f (separate sweep):
+setsid nohup bash experiments/run_ablation_nattack.sh \
+  > experiments/ablations/n_attackers/nohup.out 2>&1 &
 ```
 Single-cell form (e.g. one κ value):
 ```bash
@@ -51,8 +53,7 @@ python -m trustfl.sim.run_local --config trustfl/configs/fmnist_ecf.yaml --overr
   (AUROC 0.33→1.0) and milder at root=100 (already ~0.9).
 - **A7:** ECF is robust at all frequencies; Multi-Krum degrades as the adaptive
   attacker strikes more often (broken at continuous).
-- **A9:** norm gate strictly dominated — off raises ACC (0.81→0.88) and AUROC on every
-  attack; removed from the design.
 - **A10:** DistilBERT lifts text accuracy from ≈0.5–0.66 (underfit) to ≈0.80.
-- **A2/A3/A8 (to confirm):** candidate≈oracle ≫ clean/perturb; refresh prevents decay;
-  performance stable across κ∈[2,3], κ_safe∈[0.5,1.5].
+- **A2/A3/A8/A9 (to confirm):** candidate≈oracle ≫ clean/perturb; refresh prevents
+  decay; performance stable across κ∈[2,3], κ_safe∈[0.5,1.5]; ECF expected to hold to
+  higher `f` than distance-based Krum (which needs f < (n−2)/2).
