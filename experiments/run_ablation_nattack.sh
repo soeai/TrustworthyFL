@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Ablation A11 — number of attacking clients f (of n=20): 2,4,6,8,10 (10%..50%).
-# How does each defense degrade as the malicious fraction grows, and where does it break?
+# Ablation — number of attacking clients f (of n=20): 8 (40%) and 12 (60%, >50%).
+# f=4 (20%) is already the default in the main experiments. f=12 deliberately breaks the
+# <50%-Byzantine assumption to see how each defense fails past a malicious majority.
 # Defenses: Multi-Krum, FLTrust, ECF* (candidate+refresh + hard_gate, no norm gate).
 # Attacks: backdoor, adaptive_ecf. FashionMNIST root=500, 60 rounds, 2-GPU, resumable.
 #   setsid nohup bash experiments/run_ablation_nattack.sh > experiments/ablations/n_attackers/nohup.out 2>&1 &
@@ -20,7 +21,7 @@ defargs() {
   esac
 }
 CELLS=()
-for f in 2 4 6 8 10; do for atk in backdoor adaptive_ecf; do for d in multi_krum fltrust ecf; do
+for f in 8 12; do for atk in backdoor adaptive_ecf; do for d in multi_krum fltrust ecf; do
   CELLS+=("$atk|$d|$f")
 done; done; done
 

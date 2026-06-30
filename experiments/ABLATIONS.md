@@ -23,7 +23,7 @@ results land in `experiments/ablations/<axis>/<attack>__<value>.log` and
 | A7 | **Attack temporality** | **continuous** · intermittent `attack_prob ∈ {0.2,0.5,1.0}` | does stateless per-round scoring reuse resting-attacker rounds; how does Krum degrade with attack frequency | `experiments/intermittent/` |
 | A8a | **Gate threshold κ** | `1.5 · 2.0 · 2.5 · 3.0 · 3.5` | sensitivity of the hard-reject confidence gate (false-positive vs leakage) | `experiments/ablations/kappa/` *(run)* |
 | A8b | **Safe-zone edge κ_safe** | `0.5 · 1.0 · 1.5 · 2.0` | width of the `round_zoned` gray band (gray leakage vs honest tax) | `experiments/ablations/kappa_safe/` *(run)* |
-| A9 | **Number of attackers `f`** | `2 · 4 · 6 · 8 · 10` (of 20, i.e. 10–50%) | how each defense degrades as the malicious fraction grows, and where each breaks | `experiments/ablations/n_attackers/` *(run)* |
+| A9 | **Number of attackers `f`** | `4` (=20%, from the main experiments) · **`8`** (40%) · **`12`** (60%, >50%) | how each defense degrades as the malicious fraction grows, and the >50% breakdown | `experiments/ablations/n_attackers/` *(run: f=8,12)* |
 | A10 | **Modality / text encoder** | image (SmallCNN) · text (**DistilBERT** frozen+head vs from-scratch TextEmbedMLP) | transfer across modalities; does a pretrained encoder remove the text underfit | `experiments/imdb_distilbert/` (DistilBERT) vs the earlier TextEmbedMLP run |
 
 ## Commands (the not-yet-covered axes A2/A3/A8)
