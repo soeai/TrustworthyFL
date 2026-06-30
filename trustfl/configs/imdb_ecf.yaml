@@ -11,8 +11,10 @@ device: cuda             # cuda | cpu
 num_clients: 20
 clients_per_round: 20
 rounds: 30
-local_epochs: 1
-lr: 0.05                 # SGD on the (linear) head over frozen DistilBERT features
+local_epochs: 2          # head passes per round (AdamW converges fast; encoder frozen)
+lr: 0.001                # AdamW on the LayerNorm+Linear head over frozen features
+optimizer: adamw         # adamw | sgd  (AdamW >> SGD for the normalized linear head)
+weight_decay: 0.01
 batch_size: 64
 alpha: 0.5               # Dirichlet non-IID
 

@@ -9,9 +9,14 @@ from ..attribution.operators import get_params, set_params
 
 
 def local_train(model, loader, epochs: int = 1, lr: float = 0.01,
-                momentum: float = 0.9, device: str = "cpu") -> NDArrays:
+                momentum: float = 0.9, device: str = "cpu",
+                optimizer: str = "sgd", weight_decay: float = 0.0) -> NDArrays:
     model.to(device).train()
-    opt = torch.optim.SGD(model.parameters(), lr=lr, momentum=momentum)
+    params = [p for p in model.parameters() if p.requires_grad]  # skip frozen backbone
+    if optimizer.lower() == "adamw":
+        opt = torch.optim.AdamW(params, lr=lr, weight_decay=weight_decay)
+    else:
+        opt = torch.optim.SGD(params, lr=lr, momentum=momentum, weight_decay=weight_decay)
     for _ in range(epochs):
         for xb, yb in loader:
             xb, yb = xb.to(device), yb.to(device)

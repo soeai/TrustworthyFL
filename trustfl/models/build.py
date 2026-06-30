@@ -126,7 +126,10 @@ class DistilBertClassifier(nn.Module):
             self.encoder = DistilBertModel.from_pretrained(pretrained)
         self.pad_id = pad_id
         h = self.encoder.config.dim
-        self.pre = nn.Linear(h, h)
+        # normalized linear head: LayerNorm stabilizes the frozen-feature scale, then a
+        # single linear layer (matches the strong frozen-feature logistic probe). Much
+        # more stable under FL averaging than a 2-layer ReLU head.
+        self.norm = nn.LayerNorm(h)
         self.classifier = nn.Linear(h, num_classes)
         self._am = None
 
@@ -138,7 +141,7 @@ class DistilBertClassifier(nn.Module):
         return (last_hidden * m).sum(1) / m.sum(1).clamp(min=1.0)
 
     def _head(self, feat):
-        return self.classifier(F.relu(self.pre(feat)))
+        return self.classifier(self.norm(feat))
 
     def embed(self, ids):                       # input embeddings + stash attn mask
         self._am = self._mask(ids)

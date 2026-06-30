@@ -175,7 +175,9 @@ def run(cfg: dict):
                         Xc, yc = poison_text_backdoor(Xc, yc, tgt, token_id=ttok, pos=tpos,
                                                       frac=0.5, seed=cfg["seed"] + cid)
             new_p = local_train(m, _loader(Xc, yc, cfg["batch_size"]),
-                                epochs=cfg["local_epochs"], lr=cfg["lr"], device=dev)
+                                epochs=cfg["local_epochs"], lr=cfg["lr"], device=dev,
+                                optimizer=cfg.get("optimizer", "sgd"),
+                                weight_decay=cfg.get("weight_decay", 0.0))
             delta = [n - g for n, g in zip(new_p, global_params)]
             deltas.append(delta); ids.append(int(cid))
             is_mal.append(cid in malicious); is_atk.append(cid in attacking)
