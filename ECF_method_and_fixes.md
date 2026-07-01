@@ -64,27 +64,35 @@ weaker."*
 
 ---
 
-## 3. Motivation — a blind spot shared by parameter-space signals
+## 3. Motivation — a blind spot shared by signals read on *clean* inputs
 
 **Theory.** If a defense's decision is a function only of parameter-space statistics
 `S(δ)`, and an adversary can project `S(δ_mal)` into the benign range (ASB does, by
 construction), then **no rule over `S` separates it** — it is, in those coordinates,
-a benign update.
+a benign update. The same holds for a *representation*-space signal (e.g. per-client
+output dissimilarity) **evaluated on clean probe inputs**: an ASB backdoor is dormant
+off the trigger, so its clean-input behaviour is benign too.
 
 **Illustration (FashionMNIST, root=500), by signal type:**
 
-| Detection signal | BSR under ASB | detector AUROC |
-|---|---|---|
-| distance-based selection | 0.54 | 0.03 |
-| coordinate median | 0.11 | – |
-| trimmed mean | 0.21 | – |
-| reference-cosine | 0.04 | 0.92 |
+| Detection signal | space | BSR under ASB | detector AUROC |
+|---|---|---|---|
+| distance-based selection | parameter | 0.54 | 0.03 |
+| coordinate median | parameter | 0.11 | – |
+| trimmed mean | parameter | 0.21 | – |
+| reference-cosine | parameter | 0.04 | 0.92 |
+| **RDA** (output-RDM, clean probe) | representation | 0.99 | 0.50 |
 
 Distance/coordinate signals score ASB in the benign range (AUROC ≈ chance, the backdoor
 persists); the single reference-cosine direction retains some separation at this
-`c_min` but is itself a targetable knob (see §7 ablation on `c_min`). **The gap:** an
-update that conforms in parameter space can only be caught by a signal in **function
-space** — what the model *does*, not what its weights look like. §4 builds exactly that.
+`c_min` but is itself a targetable knob (see §7 ablation on `c_min`). Crucially, **RDA**
+— the closest prior work to ours, a *representation*-space detector — **also collapses
+to chance under ASB** (AUROC 0.50, vs 0.81 on the plain `backdoor`): its output-RDM is
+read on clean inputs, on which the ASB backdoor is dormant, so representation space is no
+more separable than parameter space here. **The gap:** the deciding signal must be read
+where the backdoor is *active*. It is not merely "function vs parameter space" — a
+clean-input function-space signal (RDA, or clean-probe ECF, §7 A2) is equally blind; the
+signal must be **activated** on trigger-carrying inputs (§4.1). §4 builds exactly that.
 
 ---
 
