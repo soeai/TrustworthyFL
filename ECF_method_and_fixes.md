@@ -35,6 +35,29 @@ distribution of every such statistic while leaving its function corrupted** — 
 (a) the L2 clip matches norm/distance statistics; (b) the cosine floor matches a
 reference-alignment statistic; the attribution signature is left unconstrained.
 
+### 2.2 Adversary knowledge — how the benign statistics `(μ, ε)` are obtained
+ASB (and `lie`/`min_max`/`constrained_backdoor`) needs the benign mean `μ` (and spread
+`ε`). **In our simulation the attacker is given the exact benign mean** of that round —
+an *omniscient, worst-case* adversary (an upper bound; the standard strong-adversary
+choice, cf. Fang 2020; Shejwalkar & Houmansadr 2021; Bagdasaryan 2020). A **real**
+malicious client never sees other clients' updates but can *estimate* `μ`:
+- **From the broadcast global model (main source, free):** every client receives
+  `θ^(r)`, so it can form the global update `θ^(r) − θ^(r−1)` ≈ the *average of all
+  clients' updates* — a strong proxy for the honest aggregate without seeing anyone.
+- **From its own honest training** on its (or public in-distribution) data — one sample
+  from the benign update distribution.
+- **From collusion** — averaging several controlled clients' honest updates.
+- **From the trajectory** of `θ^(r)` over rounds (direction + variance).
+
+**Why this matters for the evaluation (state it in the paper):** using the *exact* `μ`
+is the *hardest* case for the defense; a realistic attacker only has an *estimate*, and
+a poorer estimate pushes its update off the true benign cluster → *easier* to detect.
+So our robustness numbers are **conservative** — "if ECF withstands the omniscient
+adversary, it withstands the weaker realistic one." Suggested wording: *"we assume a
+strong (omniscient) adversary that knows the benign mean; a deployed attacker estimates
+it from the broadcast global update and its own honest training, which is strictly
+weaker."*
+
 ---
 
 ## 3. Motivation — a blind spot shared by parameter-space signals
