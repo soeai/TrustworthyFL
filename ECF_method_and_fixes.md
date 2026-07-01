@@ -222,7 +222,11 @@ grid in `experiments/fmnist_r500/summary.csv`.
 |---|---|---|---|---|
 | Multi-Krum | **0.01** | 0.54 | 0.03 | **0.883** |
 | FLTrust | 0.03 | 0.04 | 0.92 | 0.796 |
+| RDA (arXiv:2503.04473) |  |  |  |  |
 | **ECF (ours)** | 0.02 | **0.03** | **1.00** | 0.878 |
+
+*(Blank RDA row and the `champ` attack are pending — added after the single-seed grid;
+their numbers arrive with the multi-seed mean±std grid now running.)*
 
 ECF attains the best-baseline robustness (BSR 0.02–0.03), the only AUROC = 1.00 on the
 adaptive attack (Multi-Krum collapses to 0.03), and clean accuracy on par with
@@ -238,6 +242,23 @@ vs `round_zoned` vs baselines, in `experiments/intermittent/`.
 **6.5 Text underfit.** From-scratch TextEmbedMLP stalls at ACC ≈0.5–0.66; the frozen
 DistilBERT encoder + head reaches ≈0.8 (frozen-feature logistic probe ≈0.82),
 confirming the underfit is an encoder-capacity issue, not a task limit.
+
+**6.6 Text candidate probe — HotFlip vs. perturb.** Discrete tokens block the
+continuous Neural-Cleanse recovery used on image, so the text candidate probe either
+recovers a **HotFlip** universal trigger (`probes.py:_hotflip_text`) or falls back to a
+**generic perturb** token. Detection AUROC at round 30 (IMDB/DistilBERT, single seed;
+`experiments/imdb_hotflip/`):
+
+| Text probe | `backdoor` AUROC | `adaptive_ecf` AUROC |
+|---|---|---|
+| perturb / non-HotFlip candidate | 0.31 | 0.00 |
+| **HotFlip** candidate | **0.75** | 0.30 |
+
+HotFlip more than doubles text backdoor detection (0.31 → 0.75): its AUROC is flat 0.31
+through round 20 then climbs **0.31 → 0.78 → 0.75** at rounds 25–30 — the recovered
+trigger only separates once the backdoor is embedded in the head, the activated-probe
+mechanism delayed by the frozen encoder + tiny (≈3k-param) federated head. On the
+adaptive attack it reaches only 0.30; text stays the weak modality (cf. §8).
 
 ---
 
@@ -272,5 +293,8 @@ confirming the underfit is an encoder-capacity issue, not a task limit.
   separated by the reference signal; a stronger cosine-aligned variant is future work.
 - **Probe cost:** candidate recovery runs an inner optimization every `K` rounds;
   `backdoorability` is ≈17× costlier (not recommended).
-- **Text:** DistilBERT encoder is frozen (head-only federation); full FL fine-tuning is
-  future work.
+- **Text:** DistilBERT encoder is frozen (head-only federation), so attribution flows
+  through only a ≈3k-param head — weak gradients make text the harder modality. HotFlip
+  trigger recovery still doubles backdoor detection over the generic perturb probe
+  (AUROC 0.31 → 0.75, §6.6) but only once the backdoor embeds, and reaches just 0.30 on
+  the adaptive attack. Full FL fine-tuning of the encoder is future work.

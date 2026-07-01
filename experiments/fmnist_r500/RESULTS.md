@@ -1,49 +1,52 @@
 # FashionMNIST — full results (root\_size = 500)
 
-Setup: 20 clients, Dirichlet α=0.5, 4 malicious, 60 rounds. ECF runs **without a norm gate** (operates on raw updates). **ECF\*** = activated probe (candidate+refresh) + `hard_gate`; **ECF-naive** = clean probe + soft (no activated probe, no gate), the ablative reference. Baselines: coordinate-median, trimmed-mean, Multi-Krum, FLTrust. `–` = n/a. Sources: `experiments/fmnist_r500/`, `experiments/normgate_off/`.
+Setup: 20 clients, Dirichlet α=0.5, 4 malicious, 60 rounds. ECF runs **without a norm gate** (operates on raw updates). **ECF\*** = activated probe (candidate+refresh) + `hard_gate`; **ECF-naive** = clean probe + soft (no activated probe, no gate), the ablative reference. Baselines: coordinate-median, trimmed-mean, Multi-Krum, FLTrust, and the representation-space **RDA** (arXiv:2503.04473). Attacks include the external stealth baseline **CHAMP** (Chameleon Poisoning, arXiv:2509.08746). `–` = n/a. **Blank cell = pending** — the RDA defense and the CHAMP attack were added after this single-seed grid; their numbers land with the multi-seed (mean±std) grid now running. Sources: `experiments/fmnist_r500/`, `experiments/normgate_off/`.
 
 ## (A) Backdoor success rate — backdoor-family (lower better)
 
-| attack | median | trimmed\_mean | multi\_krum | fltrust | ECF-naive | **ECF\*** |
-|---|---|---|---|---|---|---|
-| backdoor | 0.13 | 0.33 | 0.01 | 0.03 | 1.00 | 0.02 |
-| constrained\_backdoor | 0.13 | 0.31 | 0.01 | 0.04 | 1.00 | 0.03 |
-| adaptive\_ecf | 0.11 | 0.21 | 0.54 | 0.04 | 0.99 | 0.03 |
+| attack | median | trimmed\_mean | multi\_krum | fltrust | RDA | ECF-naive | **ECF\*** |
+|---|---|---|---|---|---|---|---|
+| backdoor | 0.13 | 0.33 | 0.01 | 0.03 |  | 1.00 | 0.02 |
+| constrained\_backdoor | 0.13 | 0.31 | 0.01 | 0.04 |  | 1.00 | 0.03 |
+| adaptive\_ecf | 0.11 | 0.21 | 0.54 | 0.04 |  | 0.99 | 0.03 |
+| champ |  |  |  |  |  |  |  |
 
 ## (B) Detection AUROC (higher better)
 
-| attack | median | trimmed\_mean | multi\_krum | fltrust | ECF-naive | **ECF\*** |
-|---|---|---|---|---|---|---|
-| label\_flip | – | – | 1.00 | 0.81 | 1.00 | 1.00 |
-| backdoor | – | – | 1.00 | 0.94 | 0.53 | 1.00 |
-| spurious\_feature | – | – | 0.77 | 0.60 | 0.64 | 0.80 |
-| constrained\_backdoor | – | – | 1.00 | 0.88 | 0.50 | 1.00 |
-| adaptive\_ecf | – | – | 0.03 | 0.92 | 0.05 | 1.00 |
-| sign\_flip | – | – | 0.94 | 0.75 | 0.97 | 0.83 |
-| gaussian | – | – | 1.00 | 0.67 | 1.00 | 1.00 |
-| lie | – | – | 0.81 | 0.81 | 1.00 | 1.00 |
-| min\_max | – | – | 1.00 | 0.81 | 1.00 | 1.00 |
+| attack | median | trimmed\_mean | multi\_krum | fltrust | RDA | ECF-naive | **ECF\*** |
+|---|---|---|---|---|---|---|---|
+| label\_flip | – | – | 1.00 | 0.81 |  | 1.00 | 1.00 |
+| backdoor | – | – | 1.00 | 0.94 |  | 0.53 | 1.00 |
+| spurious\_feature | – | – | 0.77 | 0.60 |  | 0.64 | 0.80 |
+| constrained\_backdoor | – | – | 1.00 | 0.88 |  | 0.50 | 1.00 |
+| adaptive\_ecf | – | – | 0.03 | 0.92 |  | 0.05 | 1.00 |
+| sign\_flip | – | – | 0.94 | 0.75 |  | 0.97 | 0.83 |
+| gaussian | – | – | 1.00 | 0.67 |  | 1.00 | 1.00 |
+| lie | – | – | 0.81 | 0.81 |  | 1.00 | 1.00 |
+| min\_max | – | – | 1.00 | 0.81 |  | 1.00 | 1.00 |
+| champ |  |  |  |  |  |  |  |
 
 ## (C) Clean accuracy (higher better)
 
-| attack | median | trimmed\_mean | multi\_krum | fltrust | ECF-naive | **ECF\*** |
-|---|---|---|---|---|---|---|
-| label\_flip | 0.877 | 0.877 | 0.885 | 0.797 | 0.884 | 0.883 |
-| backdoor | 0.883 | 0.885 | 0.884 | 0.796 | 0.888 | 0.884 |
-| spurious\_feature | 0.881 | 0.884 | 0.883 | 0.801 | 0.887 | 0.886 |
-| constrained\_backdoor | 0.884 | 0.885 | 0.884 | 0.796 | 0.888 | 0.884 |
-| adaptive\_ecf | 0.884 | 0.885 | 0.883 | 0.795 | 0.888 | 0.884 |
-| sign\_flip | 0.858 | 0.859 | 0.877 | 0.788 | 0.842 | 0.831 |
-| gaussian | 0.883 | 0.884 | 0.885 | 0.796 | 0.884 | 0.884 |
-| lie | 0.881 | 0.882 | 0.881 | 0.797 | 0.884 | 0.883 |
-| min\_max | 0.851 | 0.844 | 0.885 | 0.796 | 0.829 | 0.885 |
-| **MEAN** | **0.876** | **0.876** | **0.883** | **0.796** | **0.875** | **0.878** |
+| attack | median | trimmed\_mean | multi\_krum | fltrust | RDA | ECF-naive | **ECF\*** |
+|---|---|---|---|---|---|---|---|
+| label\_flip | 0.877 | 0.877 | 0.885 | 0.797 |  | 0.884 | 0.883 |
+| backdoor | 0.883 | 0.885 | 0.884 | 0.796 |  | 0.888 | 0.884 |
+| spurious\_feature | 0.881 | 0.884 | 0.883 | 0.801 |  | 0.887 | 0.886 |
+| constrained\_backdoor | 0.884 | 0.885 | 0.884 | 0.796 |  | 0.888 | 0.884 |
+| adaptive\_ecf | 0.884 | 0.885 | 0.883 | 0.795 |  | 0.888 | 0.884 |
+| sign\_flip | 0.858 | 0.859 | 0.877 | 0.788 |  | 0.842 | 0.831 |
+| gaussian | 0.883 | 0.884 | 0.885 | 0.796 |  | 0.884 | 0.884 |
+| lie | 0.881 | 0.882 | 0.881 | 0.797 |  | 0.884 | 0.883 |
+| min\_max | 0.851 | 0.844 | 0.885 | 0.796 |  | 0.829 | 0.885 |
+| champ |  |  |  |  |  |  |  |
+| **MEAN** | **0.876** | **0.876** | **0.883** | **0.796** |  | **0.875** | **0.878** |
 
 ## (D) Mean aggregation time (s/round, avg over attacks)
 
-| attack | median | trimmed\_mean | multi\_krum | fltrust | ECF-naive | **ECF\*** |
-|---|---|---|---|---|---|---|
-| time | 0.19 | 0.19 | 0.80 | 0.04 | 0.42 | 0.39 |
+| attack | median | trimmed\_mean | multi\_krum | fltrust | RDA | ECF-naive | **ECF\*** |
+|---|---|---|---|---|---|---|---|
+| time | 0.19 | 0.19 | 0.80 | 0.04 |  | 0.42 | 0.39 |
 
 ## Discussion
 - **ECF\*** matches the strongest baselines on robustness (BSR 0.02–0.03 on the
@@ -58,6 +61,29 @@ Setup: 20 clients, Dirichlet α=0.5, 4 malicious, 60 rounds. ECF runs **without 
 - **Cost:** ECF\* aggregation is ≈0.4 s/round (incl. per-round candidate-trigger
   recovery + attribution) — still below Multi-Krum (≈0.8 s); see table (D).
 - **Weakness:** sign_flip (ECF\* accuracy 0.831 vs Multi-Krum 0.877).
+
+## Text (IMDB / DistilBERT) — candidate-probe trigger recovery: HotFlip vs. perturb
+
+Text uses a frozen DistilBERT encoder + a ≈3k-param federated head. Neural-Cleanse
+(continuous mask/pattern) does not apply to discrete tokens, so the candidate probe
+resolves either to **HotFlip** universal-trigger recovery (`probes.py:_hotflip_text`) or
+falls back to the **generic perturb** token. Detection AUROC at round 30 (single seed;
+`experiments/imdb_hotflip/`, `experiments/imdb_distilbert/`):
+
+| text probe | `backdoor` AUROC | `adaptive_ecf` AUROC | behaviour |
+|---|---|---|---|
+| perturb / non-HotFlip candidate | 0.31 | 0.00 | flat — no separation across the run |
+| **HotFlip** candidate | **0.75** | 0.30 | rises as the backdoor embeds |
+
+- HotFlip more than **doubles** text backdoor detection over the generic perturb probe
+  (0.31 → 0.75). Its trajectory on `backdoor` is flat 0.31 through round 20, then
+  **0.31 → 0.78 → 0.75** at rounds 25–30: the recovered universal trigger only becomes
+  discriminative once the backdoor is embedded in the head — the activated-probe
+  mechanism, delayed on text because the frozen encoder + tiny head give weak early
+  attribution gradients.
+- On the adaptive attack (ASB) HotFlip reaches only **0.30**: statistic-conformity plus
+  the tiny federated head leaves too little attribution divergence. Text remains the
+  weak modality (image ECF\* reaches AUROC 1.00; see §8 limitations).
 
 
 ---
