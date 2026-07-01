@@ -252,7 +252,7 @@ confirming the underfit is an encoder-capacity issue, not a task limit.
 | Score signal | **consistency** · backdoorability | consensus divergence vs per-client recovery (≈17× cost) |
 | Root size | 100 · **500** | reference quality; gain largest where base detector is weakest |
 | Attack temporality | **continuous** · intermittent | does stateless `round_zoned` reuse resting rounds for ACC |
-| **Number of attackers `f`** | 2 · **4** · 6 · 8 · 10 (of 20 clients, 10–50%) | how does each defense degrade as the malicious fraction grows; where does each break |
+| **Number of attackers `f`** | **4** (=20%, default from the main grid) · **8** (40%) · **12** (60%, >50%) | how each defense degrades as the malicious fraction grows, and the >50% breakdown |
 | Gate thresholds | κ, κ_safe | zone-boundary sensitivity |
 | Modality / encoder | image · text (**DistilBERT** vs TextEmbedMLP) | transfer; pretrained encoder removes underfit |
 
