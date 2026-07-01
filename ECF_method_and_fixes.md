@@ -174,6 +174,32 @@ IMDB: DistilBERT (frozen)+head, 30 rounds. **Attacks (9):** the standard familie
 `ecf_base` (clean+soft), `ecf_cand` (candidate+refresh+hard_gate), `ecf_zoned`
 (candidate+refresh+round_zoned), `ecf_bdoor` (backdoorability). Metrics in §1.
 
+**Default hyperparameters** (`trustfl/configs/{fmnist,imdb}_ecf.yaml`):
+
+| Hyperparameter | FashionMNIST (image) | IMDB (text) |
+|---|---|---|
+| Model | SmallCNN (421,642 params, all federated) | DistilBERT-base **frozen** + LayerNorm+Linear head (3,074 federated) |
+| Input / tokenizer | 1×28×28 | DistilBERT WordPiece, max len 128 |
+| Clients / per round | 20 / 20 (full) | 20 / 20 (full) |
+| Rounds | 60 | 30 |
+| Dirichlet α (non-IID) | 0.5 | 0.5 |
+| Malicious `f` | 4 (of 20) | 4 (of 20) |
+| Local epochs | 1 | 2 |
+| Optimizer | SGD (momentum 0.9) | AdamW (weight-decay 0.01) |
+| Learning rate | 0.01 | 0.001 |
+| Batch size | 64 | 64 |
+| Root-set size | 100 and 500 | 500 |
+| Probe size | 64 | 64 |
+| Attribution | grad×input | grad×input |
+| Target label | 0 | 1 (positive) |
+| Trigger | 3×3 bright pixel patch (bottom-right) | token id 2 at position 0 |
+| Seed | 0 | 0 |
+
+**ECF-specific** (defense_kw / probe, shared across both): `tau=0.5`, `consensus=geomedian`,
+`kappa=2.5` (hard/zoned gate), `kappa_safe=1.0` (round_zoned gray band), `norm_gate=off`.
+Candidate probe: image NC `steps=150, lr=0.1, λ=0.01`; text HotFlip `iters=3`; **refresh
+`K=5`** rounds. (`ecf_base`/`ecf_cand`/`ecf_zoned` override only `mode` and `probe.strategy`.)
+
 **6.2 Motivation experiment.** ASB vs. parameter-space signals — the §3 table; full
 grid in `experiments/fmnist_r500/summary.csv`.
 
