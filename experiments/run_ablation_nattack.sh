@@ -8,6 +8,7 @@
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; cd "$ROOT"
 CFG=trustfl/configs/fmnist_ecf.yaml; OUT=experiments/ablations/n_attackers; PROG=$OUT/progress.log; R=60
+SEEDS="0 1 2"    # 3 seeds/cell -> mean +/- std
 BASE="data_mode=real root_size=500 rounds=$R"
 CAND='probe={"strategy":"candidate","mode":"triggered","candidate":{"steps":120,"refresh":5}}'
 ECFKW='defense_kw={"tau":0.5,"mode":"hard_gate","consensus":"geomedian","norm_gate":false,"kappa":2.5}'
@@ -25,21 +26,22 @@ for f in 8 12; do for atk in backdoor adaptive_ecf; do for d in multi_krum fltru
   CELLS+=("$atk|$d|$f")
 done; done; done
 
-run_one() { # gpu attack defense f
-  local gpu=$1 atk=$2 d=$3 f=$4 log="$OUT/${atk}__${d}-f${f}.log"
-  grep -qE "round +$R " "$log" 2>/dev/null && { echo "[skip] $atk/$d/f$f"|tee -a "$PROG"; return; }
-  echo "[$(date +%H:%M:%S)] g$gpu START $atk/$d/f$f"|tee -a "$PROG"
+run_one() { # gpu attack defense f seed
+  local gpu=$1 atk=$2 d=$3 f=$4 seed=$5 log="$OUT/${atk}__${d}-f${f}__s${seed}.log"
+  grep -qE "round +$R " "$log" 2>/dev/null && { echo "[skip] $atk/$d/f$f/s$seed"|tee -a "$PROG"; return; }
+  echo "[$(date +%H:%M:%S)] g$gpu START $atk/$d/f$f/s$seed"|tee -a "$PROG"
   # shellcheck disable=SC2046
   CUDA_VISIBLE_DEVICES=$gpu python3 -u -m trustfl.sim.run_local --config "$CFG" \
-    --override $BASE attack=$atk num_malicious=$f $(defargs "$d") 2>&1 | tee "$log" >/dev/null
-  echo "[$(date +%H:%M:%S)] g$gpu DONE  $atk/$d/f$f -> $(grep -E "round +$R " "$log"|tail -1)"|tee -a "$PROG"
+    --override $BASE seed=$seed attack=$atk num_malicious=$f $(defargs "$d") 2>&1 | tee "$log" >/dev/null
+  echo "[$(date +%H:%M:%S)] g$gpu DONE  $atk/$d/f$f/s$seed -> $(grep -E "round +$R " "$log"|tail -1)"|tee -a "$PROG"
 }
-worker() { local gpu=$1 start=$2 i
+worker() { local gpu=$1 start=$2 i s
   for ((i=start; i<${#CELLS[@]}; i+=2)); do
-    IFS='|' read -r a d f <<< "${CELLS[$i]}"; run_one "$gpu" "$a" "$d" "$f"
+    IFS='|' read -r a d f <<< "${CELLS[$i]}"
+    for s in $SEEDS; do run_one "$gpu" "$a" "$d" "$f" "$s"; done
   done
 }
-echo "=== n_attackers ablation start $(date) — ${#CELLS[@]} cells ==="|tee -a "$PROG"
+echo "=== n_attackers ablation start $(date) — ${#CELLS[@]} cells x seeds {${SEEDS// /,}} ==="|tee -a "$PROG"
 worker 0 0 & worker 1 1 & wait
-python3 experiments/parse_real.py "$OUT" | tee -a "$PROG"
+python3 experiments/parse_meanstd.py "$OUT" | tee -a "$PROG"
 echo "=== ALL DONE $(date) ==="|tee -a "$PROG"

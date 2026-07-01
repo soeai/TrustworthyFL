@@ -13,6 +13,7 @@
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; cd "$ROOT"
 CFG=trustfl/configs/fmnist_ecf.yaml; OUT=experiments/ablations; PROG=$OUT/progress.log; R=60
+SEEDS="0 1 2"    # 3 seeds/cell -> mean +/- std
 BASE="data_mode=real root_size=500 rounds=$R defense=ecf attribution=grad_x_input"
 HG='{"tau":0.5,"mode":"hard_gate","consensus":"geomedian","norm_gate":false,"kappa":2.5}'
 CAND='{"strategy":"candidate","mode":"triggered","candidate":{"steps":120,"refresh":5}}'
@@ -41,23 +42,25 @@ for ks in 0.5 1.0 1.5 2.0; do
   CELLS+=("kappa_safe|adaptive_ecf|$lbl|defense_kw={\"tau\":0.5,\"mode\":\"round_zoned\",\"consensus\":\"geomedian\",\"norm_gate\":false,\"kappa\":2.5,\"kappa_safe\":$ks} probe=$CAND")
 done
 
-run_one() { # gpu axis attack value extra...
-  local gpu=$1 axis=$2 atk=$3 val=$4; shift 4
-  local log="$OUT/$axis/${atk}__${val}.log"; mkdir -p "$OUT/$axis"
-  grep -qE "round +$R " "$log" 2>/dev/null && { echo "[skip] $axis/$atk/$val"|tee -a "$PROG"; return; }
-  echo "[$(date +%H:%M:%S)] g$gpu START $axis/$atk/$val"|tee -a "$PROG"
+run_one() { # gpu axis attack value seed extra...
+  local gpu=$1 axis=$2 atk=$3 val=$4 seed=$5; shift 5
+  local log="$OUT/$axis/${atk}__${val}__s${seed}.log"; mkdir -p "$OUT/$axis"
+  grep -qE "round +$R " "$log" 2>/dev/null && { echo "[skip] $axis/$atk/$val/s$seed"|tee -a "$PROG"; return; }
+  echo "[$(date +%H:%M:%S)] g$gpu START $axis/$atk/$val/s$seed"|tee -a "$PROG"
   CUDA_VISIBLE_DEVICES=$gpu python3 -u -m trustfl.sim.run_local --config "$CFG" \
-    --override $BASE attack=$atk "$@" 2>&1 | tee "$log" >/dev/null
-  echo "[$(date +%H:%M:%S)] g$gpu DONE  $axis/$atk/$val -> $(grep -E "round +$R " "$log"|tail -1)"|tee -a "$PROG"
+    --override $BASE seed=$seed attack=$atk "$@" 2>&1 | tee "$log" >/dev/null
+  echo "[$(date +%H:%M:%S)] g$gpu DONE  $axis/$atk/$val/s$seed -> $(grep -E "round +$R " "$log"|tail -1)"|tee -a "$PROG"
 }
-worker() { local gpu=$1 start=$2 i
+worker() { local gpu=$1 start=$2 i s
   for ((i=start; i<${#CELLS[@]}; i+=2)); do
     IFS='|' read -r axis atk val extra <<< "${CELLS[$i]}"
-    # shellcheck disable=SC2086
-    run_one "$gpu" "$axis" "$atk" "$val" $extra
+    for s in $SEEDS; do
+      # shellcheck disable=SC2086
+      run_one "$gpu" "$axis" "$atk" "$val" "$s" $extra
+    done
   done
 }
-echo "=== ablations start $(date) — ${#CELLS[@]} cells ==="|tee -a "$PROG"
+echo "=== ablations start $(date) — ${#CELLS[@]} cells x seeds {${SEEDS// /,}} ==="|tee -a "$PROG"
 worker 0 0 & worker 1 1 & wait
-python3 experiments/parse_real.py "$OUT" | tee -a "$PROG"   # dataset=axis, attack, defense=value
+python3 experiments/parse_meanstd.py "$OUT" | tee -a "$PROG"   # dataset=axis, attack, defense=value; mean+/-std over seeds
 echo "=== ALL DONE $(date) ==="|tee -a "$PROG"
