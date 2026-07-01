@@ -162,7 +162,8 @@ clean-round branch reuse that data, recovering ACC without weakening attacked ro
 | **CHAMP baseline** | `sim/run_local.py` (`champ_hist`/`α_t`) + `clients/trainer.py` (`prox_mu`) | proximity-to-global camouflage + backdoor-incorporation feedback |
 | Intermittent | `sim/run_local.py` | `attack_prob`; detection ground truth = attacking-this-round |
 | IMDB tokenization | `data/datasets.py:_load_real_imdb_bert` | DistilBERT WordPiece, cached to `data/imdb_distilbert_128.npz` |
-| Multi-seed / mean±std | `experiments/parse_meanstd.py`, `run_*grid*.sh`, `run_ablation*.sh` | per-seed logs → mean/std/n_seeds |
+| Multi-seed / mean±std | `experiments/parse_meanstd.py`, `run_fmnist_grid.sh`, `run_imdb_full.sh` (full 10×8, incl. champ+rda), `run_ablation*.sh` | per-seed logs → mean/std/n_seeds |
+| ECF* mode decision | `experiments/run_ablation_mode.sh` → `experiments/ablations/mode/` | round_zoned vs hard_gate A/B (3 seeds) to fix the reported ECF* aggregation |
 
 **Config keys** (`trustfl/configs/*.yaml`, overridable via `--override`):
 `model`, `text_tokenizer`, `attack`, `attack_prob`, `num_malicious`, `root_size`,
@@ -286,7 +287,7 @@ adaptive attack it reaches only 0.30; text stays the weak modality (cf. §8).
 | Attack build-up | backdoor · norm-bounded (`constrained_backdoor`, = constrain-and-scale, Bagdasaryan 2020) · +cosine (ASB) | which conformance evades which signal (norm alone is insufficient) |
 | Probe strategy | clean · oracle · **candidate(+refresh)** · perturb | does activation restore the signal; is knowledge-free recovery ≈ oracle |
 | Candidate refresh | once-frozen · **K=5** | does re-recovery prevent detection decay |
-| Aggregation mode | soft · hard_gate · round_gate · **round_zoned** | reject vs dilute; uniform vs soft survivors; gray band value |
+| Aggregation mode | soft · hard_gate · round_gate · **round_zoned** | reject vs dilute; uniform vs soft survivors; gray band value. A dedicated 3-seed A/B **`round_zoned` vs `hard_gate`** (`experiments/ablations/mode/`, same probe/κ) fixes which is the reported ECF\* — expected tie on BSR/AUROC (same z>κ reject), round_zoned favoured on ACC (safe-zone uniform vs soft-survivors). |
 | Score signal | **consistency** · backdoorability | consensus divergence vs per-client recovery (≈17× cost) |
 | Root size | 100 · **500** | reference quality; gain largest where base detector is weakest |
 | Attack temporality | **continuous** · intermittent | does stateless `round_zoned` reuse resting rounds for ACC |
