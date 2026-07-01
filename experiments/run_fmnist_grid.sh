@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Unified FashionMNIST comparison grid (root=500), consistent with the current design
-# (ECF = candidate+refresh + hard_gate, NO norm gate). Adds the new baselines:
+# (ECF = candidate+refresh + round_zoned, NO norm gate; same mode as the IMDB grid).
+# Adds the new baselines:
 #   defense RDA (arXiv 2503.04473) and attack CHAMP (arXiv 2509.08746).
 # 6 defenses x 10 attacks x 3 seeds = 180 runs (mean+/-std), 2-GPU, resumable.
 #   setsid nohup bash experiments/run_fmnist_grid.sh > experiments/fmnist_grid/nohup.out 2>&1 &
@@ -14,7 +15,7 @@ SEEDS="0 1 2"    # repeats per cell -> mean +/- std
 overrides_of() {
   case $1 in
     median|trimmed_mean|multi_krum|fltrust|rda) echo "defense=$1";;
-    ecf) echo 'defense=ecf attribution=grad_x_input defense_kw={"tau":0.5,"mode":"hard_gate","consensus":"geomedian","norm_gate":false,"kappa":2.5} probe={"strategy":"candidate","mode":"triggered","candidate":{"steps":120,"refresh":5}}';;
+    ecf) echo 'defense=ecf attribution=grad_x_input defense_kw={"tau":0.5,"mode":"round_zoned","consensus":"geomedian","norm_gate":false,"kappa":2.5,"kappa_safe":1.0} probe={"strategy":"candidate","mode":"triggered","candidate":{"steps":120,"refresh":5}}';;
   esac
 }
 CELLS=(); for a in $ATTACKS; do for d in $DEFENSES; do for s in $SEEDS; do CELLS+=("$a|$d|$s"); done; done; done
