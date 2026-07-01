@@ -5,6 +5,7 @@ from .fedavg import FedAvg
 from .robust import TrimmedMean, CoordinateMedian, MultiKrum
 from .fltrust import FLTrust
 from .ecf import ECF
+from .rda import RDA
 
 
 def build_defense(name: str, **kw):
@@ -15,6 +16,8 @@ def build_defense(name: str, **kw):
         "median": lambda: CoordinateMedian(),
         "multi_krum": lambda: MultiKrum(num_malicious=kw.get("num_malicious")),
         "fltrust": lambda: FLTrust(),
+        "rda": lambda: RDA(num_malicious=kw.get("num_malicious"),
+                           lof_neighbors=kw.get("lof_neighbors"), delta=kw.get("delta", 1.5)),
         "ecf": lambda: ECF(tau=kw.get("tau", 0.5), mode=kw.get("mode", "soft"),
                            consensus=kw.get("consensus", "geomedian"),
                            beta=kw.get("beta", 2.0), norm_gate=kw.get("norm_gate", False),

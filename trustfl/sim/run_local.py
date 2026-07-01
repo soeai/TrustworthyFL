@@ -21,7 +21,7 @@ from ..data.backdoor import poison_backdoor, add_pixel_trigger
 from ..models.build import build_model
 from ..clients.trainer import local_train, evaluate, backdoor_success_rate
 from ..attribution.operators import (set_params, get_params, make_attribution_fn,
-                                     server_reference_update)
+                                     server_reference_update, make_output_fn)
 from ..attribution.probes import build_probe
 from ..attribution.backdoorability import make_backdoorability_fn
 from ..attacks.data_attacks import (label_flip, poison_spurious_feature,
@@ -119,6 +119,17 @@ def run(cfg: dict):
 
     if probe_strategy != "clean":
         probe_x = _make_probe(global_params)
+
+    # RDA baseline: a small class-balanced *labeled* probe (b samples per class)
+    rda_probe_x = None
+    if defense.name == "rda":
+        b = int(cfg.get("rda_b", 5))
+        idx = []
+        for c in range(meta.num_classes):
+            ci = np.where(yte.numpy() == c)[0]
+            if len(ci):
+                idx.extend(rng.choice(ci, size=min(b, len(ci)), replace=False).tolist())
+        rda_probe_x = Xte[idx]
 
     print(f"device={dev} dataset={meta.name}({meta.source}) clients={cfg['num_clients']} "
           f"malicious={len(malicious)} defense={defense.name} attack={cfg['attack']}")
@@ -235,6 +246,8 @@ def run(cfg: dict):
 
         # ---- context for defenses that need it ----
         ctx = AggContext(global_params=global_params)
+        if defense.name == "rda":
+            ctx.repr_fn = make_output_fn(build_model(cfg["model"], **mkw), rda_probe_x, device=dev)
         if defense.name in ("fltrust", "ecf"):
             ctx.server_update = server_reference_update(
                 build_model(cfg["model"], **mkw), root_loader, global_params,

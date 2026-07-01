@@ -35,6 +35,8 @@ class AggContext:
     # per-client suspicion scores (higher = more suspicious), e.g. backdoorability;
     # an alternative ECF signal to attribution consistency.
     score_fn: Optional[Callable[[List[NDArrays]], np.ndarray]] = None
+    # maps client params -> [n, m, C] output vectors on a labeled probe (used by RDA).
+    repr_fn: Optional[Callable[[List[NDArrays]], np.ndarray]] = None
     extras: dict = field(default_factory=dict)
 
 

@@ -166,6 +166,25 @@ def make_attribution_fn(model: torch.nn.Module, probe_x: torch.Tensor,
     return attribution_fn
 
 
+def make_output_fn(model: torch.nn.Module, probe_x: torch.Tensor,
+                   device: str = "cpu") -> Callable[[List[NDArrays]], np.ndarray]:
+    """Closure for RDA: maps client params -> softmax output vectors on the probe,
+    shape ``[n, m, C]`` (no gradients)."""
+    model.to(device).eval()
+    probe_x = probe_x.to(device)
+
+    def output_fn(client_params: List[NDArrays]) -> np.ndarray:
+        outs = []
+        for p in client_params:
+            set_params(model, p); model.eval()
+            with torch.no_grad():
+                o = torch.softmax(model(probe_x), dim=1)     # [m, C]
+            outs.append(o.cpu().numpy())
+        return np.stack(outs, axis=0)                        # [n, m, C]
+
+    return output_fn
+
+
 def server_reference_update(model, root_loader, global_params, epochs, lr, device):
     """FLTrust/ECF reference update: train the global model on the server root
     set for one short pass and return the resulting delta."""
