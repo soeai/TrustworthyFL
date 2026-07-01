@@ -179,7 +179,10 @@ Run: `python -m trustfl.sim.run_local --config <cfg> --override k=v …`. Grids:
 ## 6. Experiments
 
 **6.1 Protocol.** `n=20` clients, full participation, Dirichlet non-IID `α=0.5`,
-`f=4` malicious, real data. FashionMNIST: SmallCNN, 60 rounds, `root_size∈{100,500}`.
+`f=4` malicious, real data. **All main results use continuous attacks** (`attack_prob=1.0`,
+always-on — every malicious client attacks every round); intermittent attacks
+(`attack_prob<1`) are a separate ablation only (§6.4 / §7 A7, `experiments/intermittent/`).
+FashionMNIST: SmallCNN, 60 rounds, `root_size∈{100,500}`.
 IMDB: DistilBERT (frozen)+head, 30 rounds. **Attacks (10):** the standard families + ASB
 + CHAMP. **Defenses:** robust-aggregation baselines `fedavg/median/trimmed_mean/
 multi_krum/fltrust`, the representation-space baseline **RDA** (arXiv:2503.04473), and
