@@ -21,7 +21,11 @@ the per-round malicious mask is known — detector AUROC / TPR@5%.
 ## 2. Threat model
 
 **Standard families (baselines).** Data-space: `label_flip`, `backdoor` (BadNets).
-Update-space: `sign_flip`, `gaussian`, `lie`, `min_max`.
+Update-space: `sign_flip`, `gaussian`, `lie`, `min_max`. **External stealth baseline:**
+`champ` — Chameleon Poisoning (arXiv:2509.08746), an adaptive black-box stealth-by-
+conformity backdoor: local loss `L_pois + α_t·L_prox` (proximity-to-global camouflage),
+`α_t = 1 − mean(recent backdoor-incorporation)`; the incorporation feedback is proxied
+by the observable global backdoor success rate. Complements our white-box ASB.
 
 ### 2.1 Proposed attack — Aligned Stealth Backdoor (ASB)  *(code: `adaptive_ecf`)*
 A robust aggregator decides from *statistics* of the update `S(δ)` (norm, pairwise
@@ -150,9 +154,12 @@ clean-round branch reuse that data, recovering ACC without weakening attacked ro
 | Divergence + zones | `attribution/divergence.py:trust_weights` | modes `soft`/`hard`/`hard_gate`/`round_gate`/`round_zoned`; params `κ`, `κ_safe` |
 | Backdoorability score | `attribution/backdoorability.py` | per-client min-mask (alt. signal) |
 | ECF defense | `defenses/ecf.py`, `defenses/factory.py` | `score ∈ {consistency, backdoorability}` |
+| **RDA baseline** | `defenses/rda.py` (+ `operators.make_output_fn`, `AggContext.repr_fn`) | per-client RDM (cosine) on a labeled probe → Pearson-distance → iterative LOF exclusion |
 | ASB + family | `attacks/update_attacks.py` (`adaptive_evade`, `constrain_to_benign`, `_project_insider`), `attacks/data_attacks.py` | |
+| **CHAMP baseline** | `sim/run_local.py` (`champ_hist`/`α_t`) + `clients/trainer.py` (`prox_mu`) | proximity-to-global camouflage + backdoor-incorporation feedback |
 | Intermittent | `sim/run_local.py` | `attack_prob`; detection ground truth = attacking-this-round |
 | IMDB tokenization | `data/datasets.py:_load_real_imdb_bert` | DistilBERT WordPiece, cached to `data/imdb_distilbert_128.npz` |
+| Multi-seed / mean±std | `experiments/parse_meanstd.py`, `run_*grid*.sh`, `run_ablation*.sh` | per-seed logs → mean/std/n_seeds |
 
 **Config keys** (`trustfl/configs/*.yaml`, overridable via `--override`):
 `model`, `text_tokenizer`, `attack`, `attack_prob`, `num_malicious`, `root_size`,
@@ -169,10 +176,14 @@ Run: `python -m trustfl.sim.run_local --config <cfg> --override k=v …`. Grids:
 
 **6.1 Protocol.** `n=20` clients, full participation, Dirichlet non-IID `α=0.5`,
 `f=4` malicious, real data. FashionMNIST: SmallCNN, 60 rounds, `root_size∈{100,500}`.
-IMDB: DistilBERT (frozen)+head, 30 rounds. **Attacks (9):** the standard families + ASB.
-**Defenses:** baselines `fedavg/median/trimmed_mean/multi_krum/fltrust`; ECF variants
-`ecf_base` (clean+soft), `ecf_cand` (candidate+refresh+hard_gate), `ecf_zoned`
+IMDB: DistilBERT (frozen)+head, 30 rounds. **Attacks (10):** the standard families + ASB
++ CHAMP. **Defenses:** robust-aggregation baselines `fedavg/median/trimmed_mean/
+multi_krum/fltrust`, the representation-space baseline **RDA** (arXiv:2503.04473), and
+ECF variants `ecf_base` (clean+soft), `ecf_cand` (candidate+refresh+hard_gate), `ecf_zoned`
 (candidate+refresh+round_zoned), `ecf_bdoor` (backdoorability). Metrics in §1.
+**Repeats:** every configuration is run over multiple seeds and reported as **mean ± std**
+— FashionMNIST main grid & ablations use 3 seeds `{0,1,2}`; IMDB (DistilBERT, costlier)
+uses 2 seeds `{0,1}` (`experiments/parse_meanstd.py` → `summary_meanstd.csv`).
 
 **Default hyperparameters** (`trustfl/configs/{fmnist,imdb}_ecf.yaml`):
 
