@@ -1,12 +1,12 @@
 # FashionMNIST — full results (root\_size = 500)
 
-Setup: 20 clients, Dirichlet α=0.5, 4 malicious, 60 rounds. ECF runs **without a norm gate** (operates on raw updates). **ECF\*** = activated probe (candidate+refresh) + gate; **ECF-naive** = clean probe + soft (no activated probe, no gate), the ablative reference. Baselines: coordinate-median, trimmed-mean, Multi-Krum, FLTrust, and the representation-space **RDA** (arXiv:2503.04473). Attacks include the external stealth baseline **CHAMP** (Chameleon Poisoning, arXiv:2509.08746). `–` = n/a.
+Setup: 20 clients, Dirichlet α=0.5, 4 malicious, 60 rounds. ECF runs **without a norm gate** (operates on raw updates). Two named ECF configs: **ECF\*** = the main method (`candidate` + `refresh` + `round_zoned`) — unqualified "ECF" means ECF\*; **`ecf_base`** = clean probe + soft (no activation, no gate), the naive ablative reference. All other ECF settings (probe `oracle`/`perturb`, mode `hard_gate`/`round_gate`, `backdoorability`) are ablations; `oracle` is a note-only upper bound. Baselines: coordinate-median, trimmed-mean, Multi-Krum, FLTrust, and the representation-space **RDA** (arXiv:2503.04473). Attacks include the external stealth baseline **CHAMP** (Chameleon Poisoning, arXiv:2509.08746). `–` = n/a.
 
 > **Note on aggregation mode.** The tables below are the **single-seed `hard_gate`** run (`experiments/fmnist_r500/`). The reported ECF now uses **`round_zoned`** (the paper's main aggregation, §4.3), the same mode as the IMDB grid. The multi-seed `round_zoned` grid now running (`experiments/fmnist_grid/`) will replace these with **mean ± std** and fill the blank cells. `round_zoned` generalizes `hard_gate` (same z>κ hard-reject at κ=2.5, plus a soft gray band), so the numbers are expected to move only marginally. **Blank cell = pending** — the RDA defense and the CHAMP attack were added after the single-seed grid. Sources: `experiments/fmnist_r500/`, `experiments/normgate_off/`.
 
 ## (A) Backdoor success rate — backdoor-family (lower better)
 
-| attack | median | trimmed\_mean | multi\_krum | fltrust | RDA | ECF-naive | **ECF\*** |
+| attack | median | trimmed\_mean | multi\_krum | fltrust | RDA | ecf\_base | **ECF\*** |
 |---|---|---|---|---|---|---|---|
 | backdoor | 0.13 | 0.33 | 0.01 | 0.03 |  | 1.00 | 0.02 |
 | constrained\_backdoor | 0.13 | 0.31 | 0.01 | 0.04 |  | 1.00 | 0.03 |
@@ -15,7 +15,7 @@ Setup: 20 clients, Dirichlet α=0.5, 4 malicious, 60 rounds. ECF runs **without 
 
 ## (B) Detection AUROC (higher better)
 
-| attack | median | trimmed\_mean | multi\_krum | fltrust | RDA | ECF-naive | **ECF\*** |
+| attack | median | trimmed\_mean | multi\_krum | fltrust | RDA | ecf\_base | **ECF\*** |
 |---|---|---|---|---|---|---|---|
 | label\_flip | – | – | 1.00 | 0.81 |  | 1.00 | 1.00 |
 | backdoor | – | – | 1.00 | 0.94 |  | 0.53 | 1.00 |
@@ -30,7 +30,7 @@ Setup: 20 clients, Dirichlet α=0.5, 4 malicious, 60 rounds. ECF runs **without 
 
 ## (C) Clean accuracy (higher better)
 
-| attack | median | trimmed\_mean | multi\_krum | fltrust | RDA | ECF-naive | **ECF\*** |
+| attack | median | trimmed\_mean | multi\_krum | fltrust | RDA | ecf\_base | **ECF\*** |
 |---|---|---|---|---|---|---|---|
 | label\_flip | 0.877 | 0.877 | 0.885 | 0.797 |  | 0.884 | 0.883 |
 | backdoor | 0.883 | 0.885 | 0.884 | 0.796 |  | 0.888 | 0.884 |
@@ -46,7 +46,7 @@ Setup: 20 clients, Dirichlet α=0.5, 4 malicious, 60 rounds. ECF runs **without 
 
 ## (D) Mean aggregation time (s/round, avg over attacks)
 
-| attack | median | trimmed\_mean | multi\_krum | fltrust | RDA | ECF-naive | **ECF\*** |
+| attack | median | trimmed\_mean | multi\_krum | fltrust | RDA | ecf\_base | **ECF\*** |
 |---|---|---|---|---|---|---|---|
 | time | 0.19 | 0.19 | 0.80 | 0.04 |  | 0.42 | 0.39 |
 
@@ -58,7 +58,7 @@ Setup: 20 clients, Dirichlet α=0.5, 4 malicious, 60 rounds. ECF runs **without 
   (BSR 0.54, AUROC 0.03); FLTrust holds (0.04) but at much lower accuracy.
 - **Norm-large noise (gaussian/min_max):** ECF\* detects (AUROC 1.00) and keeps ≈0.885
   accuracy — the raw (un-clipped) update is highly divergent and hard-rejected.
-- **ECF-naive** (no activated probe, no gate) fails on every backdoor (BSR ≈1.0),
+- **ecf\_base** (no activated probe, no gate) fails on every backdoor (BSR ≈1.0),
   confirming both the activated probe and the confidence gate are necessary.
 - **Cost:** ECF\* aggregation is ≈0.4 s/round (incl. per-round candidate-trigger
   recovery + attribution) — still below Multi-Krum (≈0.8 s); see table (D).

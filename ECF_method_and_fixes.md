@@ -105,10 +105,13 @@ robust consensus `c̄_j=geomedian_i(a_i(x_j))`,
 *Link:* §3's blind spot is exactly that ASB is dormant on the clean inputs a probe
 uses. *Theory:* a backdoor's corruption lives on the **trigger sub-manifold**; on clean
 inputs `div_i` is uninformative (and under non-IID even penalizes honest spread).
-*Construction* (`probe.strategy`): `oracle` (known trigger, upper bound); **`candidate`**
-— reverse-engineer a trigger from the *live* global by Neural-Cleanse-lite
+*Construction* (`probe.strategy`): ECF\* uses **`candidate`** — reverse-engineer a
+trigger from the *live* global by Neural-Cleanse-lite
 `min_{m,p} CE(f_{θ^(r)}((1−m)⊙x+m⊙p),t)+λ‖m‖₁`, **refreshed every `K` rounds**
-(knowledge-free; frozen-from-init recovery decays); `perturb` (generic, weakest).
+(knowledge-free — the server assumes nothing about the attacker; frozen-from-init
+recovery decays). *Note, not used as the method:* `oracle` (the true trigger) is
+reported only as an unrealistic upper bound; `perturb` (generic) and `clean` are
+ablation baselines (§7).
 
 ### 4.2 (ii) Detection must *act* — Bottleneck B → confidence-gated hard rejection
 *Link:* a function-space *score* alone does not stop ASB if the aggregator still admits
@@ -179,11 +182,17 @@ Run: `python -m trustfl.sim.run_local --config <cfg> --override k=v …`. Grids:
 IMDB: DistilBERT (frozen)+head, 30 rounds. **Attacks (10):** the standard families + ASB
 + CHAMP. **Defenses:** robust-aggregation baselines `fedavg/median/trimmed_mean/
 multi_krum/fltrust`, the representation-space baseline **RDA** (arXiv:2503.04473), and
-ECF variants `ecf_base` (clean+soft, the ablative naive reference) and the **main ECF**
-`ecf_cand` = candidate+refresh + **`round_zoned`** (κ=2.5, κ_safe=1.0, the §4.3
-aggregation) — **the same mode on both modalities** (FashionMNIST and IMDB); plus
-`ecf_bdoor` (backdoorability, alt. signal). `hard_gate` is kept only as an ablation
-(§7, aggregation-mode axis). Metrics in §1.
+**Two named ECF configs (paper convention).**
+- **`ecf_base`** — clean probe + soft weighting (no activation, no gate): the *naive
+  ablative reference*.
+- **ECF\*** — **`candidate` + `refresh` + `round_zoned`** (κ=2.5, κ_safe=1.0),
+  **identical on both modalities** (FashionMNIST and IMDB): **the main method.
+  Unqualified "ECF" always means ECF\*.** (In the logs ECF\* is `ecf_cand`.)
+
+Everything else is an *ablation of ECF\** along a single axis (§7): probe
+`oracle`/`perturb`/`clean`, mode `soft`/`hard_gate`/`round_gate`, score
+`backdoorability`, root=100. `oracle` is only ever a *note* (unrealistic upper bound),
+never the method. Metrics in §1.
 **Repeats:** every configuration is run over multiple seeds and reported as **mean ± std**
 — FashionMNIST main grid & ablations use 3 seeds `{0,1,2}`; IMDB (DistilBERT, costlier)
 uses 2 seeds `{0,1}` (`experiments/parse_meanstd.py` → `summary_meanstd.csv`).
@@ -227,7 +236,7 @@ grid in `experiments/fmnist_r500/summary.csv`.
 | Multi-Krum | **0.01** | 0.54 | 0.03 | **0.883** |
 | FLTrust | 0.03 | 0.04 | 0.92 | 0.796 |
 | RDA (arXiv:2503.04473) |  |  |  |  |
-| **ECF (ours)** | 0.02 | **0.03** | **1.00** | 0.878 |
+| **ECF\* (ours)** | 0.02 | **0.03** | **1.00** | 0.878 |
 
 *(Interim numbers: this table is the single-seed `hard_gate` run (`fmnist_r500`). The
 reported ECF uses **`round_zoned`** (§4.3); the multi-seed `round_zoned` grid now running
@@ -236,7 +245,7 @@ blank RDA row and `champ` attack. `round_zoned` generalizes `hard_gate` — same
 hard-reject at κ=2.5, plus a soft gray band — so the headline figures are expected to
 move only marginally.)*
 
-ECF attains the best-baseline robustness (BSR 0.02–0.03), the only AUROC = 1.00 on the
+ECF\* attains the best-baseline robustness (BSR 0.02–0.03), the only AUROC = 1.00 on the
 adaptive attack (Multi-Krum collapses to 0.03), and clean accuracy on par with
 Multi-Krum (0.878 vs 0.883) — far above FLTrust (0.796). The full attack×defense grid
 (BSR / detection AUROC / clean accuracy, all 9 attacks × 8 defenses) and discussion are
