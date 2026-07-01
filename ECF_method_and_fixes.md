@@ -81,18 +81,21 @@ off the trigger, so its clean-input behaviour is benign too.
 | coordinate median | parameter | 0.11 | – |
 | trimmed mean | parameter | 0.21 | – |
 | reference-cosine | parameter | 0.04 | 0.92 |
-| **RDA** (output-RDM, clean probe) | representation | 0.99 | 0.50 |
+| **RDA** (output-RDM, clean probe) | representation | ≥0.96 | 0.50 |
 
 Distance/coordinate signals score ASB in the benign range (AUROC ≈ chance, the backdoor
 persists); the single reference-cosine direction retains some separation at this
 `c_min` but is itself a targetable knob (see §7 ablation on `c_min`). Crucially, **RDA**
-— the closest prior work to ours, a *representation*-space detector — **also collapses
-to chance under ASB** (AUROC 0.50, vs 0.81 on the plain `backdoor`): its output-RDM is
-read on clean inputs, on which the ASB backdoor is dormant, so representation space is no
-more separable than parameter space here. **The gap:** the deciding signal must be read
-where the backdoor is *active*. It is not merely "function vs parameter space" — a
-clean-input function-space signal (RDA, or clean-probe ECF, §7 A2) is equally blind; the
-signal must be **activated** on trigger-carrying inputs (§4.1). §4 builds exactly that.
+— the closest prior work to ours, a *representation*-space detector — **collapses to
+chance under ASB even at its best-tuned config**: over a softmax/logits × δ sweep its
+detector AUROC reaches **0.88 on the plain `backdoor`** (RDA is a competent non-adaptive
+detector) but only **0.50 (chance) under ASB**, and its BSR stays **≥0.96 in every
+configuration** (`experiments/rda_fidelity/`). Its output-RDM is read on clean inputs, on
+which the ASB backdoor is dormant, so representation space is no more separable than
+parameter space here. **The gap:** the deciding signal must be read where the backdoor is
+*active*. It is not merely "function vs parameter space" — a clean-input function-space
+signal (RDA, or clean-probe ECF, §7 A2) is equally blind; the signal must be **activated**
+on trigger-carrying inputs (§4.1). §4 builds exactly that.
 
 ---
 
