@@ -165,7 +165,7 @@ clean-round branch reuse that data, recovering ACC without weakening attacked ro
 | Divergence + zones | `attribution/divergence.py:trust_weights` | modes `soft`/`hard`/`hard_gate`/`round_gate`/`round_zoned`; params `κ`, `κ_safe` |
 | Backdoorability score | `attribution/backdoorability.py` | per-client min-mask (alt. signal) |
 | ECF defense | `defenses/ecf.py`, `defenses/factory.py` | `score ∈ {consistency, backdoorability}` |
-| **RDA baseline** | `defenses/rda.py` (+ `operators.make_output_fn`, `AggContext.repr_fn`) | per-client RDM (cosine) on a labeled probe → Pearson-distance → iterative LOF exclusion |
+| **RDA baseline** | `defenses/rda.py` (+ `operators.make_output_fn`, `AggContext.repr_fn`) | per-client RDM (cosine) on a labeled probe → Pearson-distance → iterative LOF exclusion. **Verified faithful to arXiv:2503.04473** (clean class-balanced probe, output-vector cosine RDM, Pearson client-compare, iterative LOF, peer-to-peer, single pass); LOF provably removes true RDM outliers on synthetic data, so its high BSR is the §3 clean-probe blindness, not a mis-impl (δ/logits tuning does not rescue it) |
 | ASB + family | `attacks/update_attacks.py` (`adaptive_evade`, `constrain_to_benign`, `_project_insider`), `attacks/data_attacks.py` | |
 | **CHAMP baseline** | `sim/run_local.py` (`champ_hist`/`α_t`) + `clients/trainer.py` (`prox_mu`) | proximity-to-global camouflage + backdoor-incorporation feedback |
 | Intermittent | `sim/run_local.py` | `attack_prob`; detection ground truth = attacking-this-round |

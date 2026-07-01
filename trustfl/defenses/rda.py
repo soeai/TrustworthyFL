@@ -9,6 +9,17 @@ Local-Outlier-Factor (LOF) outliers. Survivors are sample-weight averaged.
 
 A representation-space detector like ECF but on the *output geometry* of a clean probe
 (no probe activation, no attribution) — the natural competitor to compare against.
+
+Fidelity to arXiv:2503.04473 (verified 2026-07): matches the paper on all steps — clean
+class-balanced probe, per-sample-pair *cosine*-distance RDM from output vectors,
+*Pearson*-distance client-to-client comparison, iterative *LOF* exclusion (threshold δ),
+peer-to-peer (no reference model), single deterministic forward pass. The LOF exclusion
+was checked to remove exactly the true outliers on synthetic data, so RDA's high BSR on
+FashionMNIST is NOT a mis-implementation: on a *clean* probe a dormant backdoor barely
+perturbs the output geometry, so backdoored clients are not RDM outliers (detector AUROC
+≈0.73 on `backdoor`, ≈0.50 under ASB) — the clean-probe blind spot of §3. Lowering δ or
+using logits instead of softmax does not change this. `make_output_fn(use_softmax=...)`
+exposes the logits variant; δ/LOF-k are `defense_kw={delta,lof_neighbors}`.
 """
 from __future__ import annotations
 from typing import List

@@ -167,9 +167,11 @@ def make_attribution_fn(model: torch.nn.Module, probe_x: torch.Tensor,
 
 
 def make_output_fn(model: torch.nn.Module, probe_x: torch.Tensor,
-                   device: str = "cpu") -> Callable[[List[NDArrays]], np.ndarray]:
-    """Closure for RDA: maps client params -> softmax output vectors on the probe,
-    shape ``[n, m, C]`` (no gradients)."""
+                   device: str = "cpu", use_softmax: bool = True) -> Callable[[List[NDArrays]], np.ndarray]:
+    """Closure for RDA: maps client params -> output vectors on the probe, shape
+    ``[n, m, C]`` (no gradients). ``use_softmax`` gives softmax probabilities (default);
+    ``use_softmax=False`` gives the raw logits ("output response vectors" as in the RDA
+    paper), whose un-normalised geometry is more discriminative under cosine distance."""
     model.to(device).eval()
     probe_x = probe_x.to(device)
 
@@ -178,7 +180,9 @@ def make_output_fn(model: torch.nn.Module, probe_x: torch.Tensor,
         for p in client_params:
             set_params(model, p); model.eval()
             with torch.no_grad():
-                o = torch.softmax(model(probe_x), dim=1)     # [m, C]
+                o = model(probe_x)                           # [m, C] logits
+                if use_softmax:
+                    o = torch.softmax(o, dim=1)
             outs.append(o.cpu().numpy())
         return np.stack(outs, axis=0)                        # [n, m, C]
 

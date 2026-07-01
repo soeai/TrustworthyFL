@@ -247,7 +247,8 @@ def run(cfg: dict):
         # ---- context for defenses that need it ----
         ctx = AggContext(global_params=global_params)
         if defense.name == "rda":
-            ctx.repr_fn = make_output_fn(build_model(cfg["model"], **mkw), rda_probe_x, device=dev)
+            ctx.repr_fn = make_output_fn(build_model(cfg["model"], **mkw), rda_probe_x, device=dev,
+                                         use_softmax=bool(cfg.get("rda_softmax", True)))
         if defense.name in ("fltrust", "ecf"):
             ctx.server_update = server_reference_update(
                 build_model(cfg["model"], **mkw), root_loader, global_params,
