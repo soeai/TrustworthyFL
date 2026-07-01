@@ -125,6 +125,49 @@ def _nc_tabular(model, probe_x, num_classes, device, target_label, kw):
     return best
 
 
+def _hotflip_text(model, probe_ids, target_label, device, positions=(0, 1, 2, 3), iters=3):
+    """Universal-adversarial-trigger recovery for text (HotFlip; Wallace et al. 2019).
+    Discrete tokens block Neural-Cleanse, so we gradient-rank vocab tokens instead: at a
+    trigger position, take the gradient of the target-class CE w.r.t. the word embedding
+    and pick the token whose embedding most decreases it; iterate; keep the best position.
+    Returns (pos, token_id) — a REAL WordPiece trigger matching the token-insertion attack.
+    Needs the classifier's frozen encoder + head (DistilBertClassifier)."""
+    we = model.encoder.embeddings.word_embeddings          # nn.Embedding [V, H]
+    W = we.weight                                          # [V, H]
+    pad = int(getattr(model, "pad_id", 0))
+    special = [0, 100, 101, 102, 103]                      # PAD/UNK/CLS/SEP/MASK (distilbert-base-uncased)
+    B, L = probe_ids.shape
+    y = torch.full((B,), int(target_label), device=device, dtype=torch.long)
+
+    def target_loss(ids):
+        with torch.no_grad():
+            am = (ids != pad).long()
+            h = model.encoder(input_ids=ids, attention_mask=am).last_hidden_state
+            return F.cross_entropy(model._head(model._pool(h, am)), y).item()
+
+    best = None                                            # (loss, pos, tok)
+    for pos in positions:
+        if pos >= L:
+            continue
+        ids = probe_ids.clone()
+        tok = int(ids[0, pos].item())
+        for _ in range(iters):
+            ids[:, pos] = tok
+            inp = we(ids).detach().requires_grad_(True)    # word embeddings [B,L,H]
+            am = (ids != pad).long()
+            h = model.encoder(inputs_embeds=inp, attention_mask=am).last_hidden_state
+            loss = F.cross_entropy(model._head(model._pool(h, am)), y)
+            g = torch.autograd.grad(loss, inp)[0][:, pos, :].mean(0)   # [H]
+            scores = W @ g                                 # [V]; minimize -> decrease loss
+            scores[special] = float("inf")
+            tok = int(scores.argmin().item())
+        ids[:, pos] = tok
+        lo = target_loss(ids)
+        if best is None or lo < best[0]:
+            best = (lo, pos, tok)
+    return best[1], best[2]
+
+
 def _candidate(probe_x, modality, num_classes, model, global_params, device, target_label, kw):
     set_params(model, global_params); model.to(device).eval()
     probe_x = probe_x.to(device)
@@ -132,7 +175,11 @@ def _candidate(probe_x, modality, num_classes, model, global_params, device, tar
         out = _nc_image(model, probe_x, num_classes, device, target_label, kw)
     elif modality == "tabular":
         out = _nc_tabular(model, probe_x, num_classes, device, target_label, kw)
-    else:                                                 # discrete tokens -> no NC; fall back
+    elif hasattr(model, "encoder") and hasattr(model, "_head"):   # text w/ DistilBERT
+        pos, tok = _hotflip_text(model, probe_x.long(), target_label, device,
+                                 iters=int(kw.get("hotflip_iters", 3)))
+        out = text_trigger(probe_x, token_id=tok, pos=pos)
+    else:                                                 # fallback (e.g. TextEmbedMLP)
         out = _perturb(probe_x, modality, kw)
     return out.cpu()
 

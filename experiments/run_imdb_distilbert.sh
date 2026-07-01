@@ -14,8 +14,8 @@ DEFENSES="fedavg median trimmed_mean multi_krum fltrust ecf_base ecf_cand"
 overrides_of() {
   case $1 in
     fedavg|median|trimmed_mean|multi_krum|fltrust) echo "defense=$1";;
-    ecf_base)  echo 'defense=ecf attribution=grad_x_input defense_kw={"tau":0.5,"mode":"soft","consensus":"geomedian","norm_gate":true} probe={"strategy":"clean"}';;
-    ecf_cand)  echo 'defense=ecf attribution=grad_x_input defense_kw={"tau":0.5,"mode":"round_zoned","consensus":"geomedian","norm_gate":true,"kappa":2.5,"kappa_safe":1.0} probe={"strategy":"candidate","mode":"triggered","candidate":{"steps":120,"refresh":5}}';;
+    ecf_base)  echo 'defense=ecf attribution=grad_x_input defense_kw={"tau":0.5,"mode":"soft","consensus":"geomedian","norm_gate":false} probe={"strategy":"clean"}';;
+    ecf_cand)  echo 'defense=ecf attribution=grad_x_input defense_kw={"tau":0.5,"mode":"round_zoned","consensus":"geomedian","norm_gate":false,"kappa":2.5,"kappa_safe":1.0} probe={"strategy":"candidate","mode":"triggered","candidate":{"steps":120,"refresh":5}}';;
   esac
 }
 
