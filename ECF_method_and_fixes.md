@@ -139,7 +139,7 @@ clean-round branch reuse that data, recovering ACC without weakening attacked ro
 > **Activated-probe (candidate+refresh) explanation-divergence scoring → confidence-
 > zoned, stateless trust aggregation (`round_zoned`)**; for text the DistilBERT encoder
 > is frozen and only a head is federated. The aggregator operates directly on the raw
-> client updates (the hard gate rejects large-norm attacks on its own).
+> client updates (the z>κ reject gate handles large-norm attacks on its own).
 
 ---
 
@@ -179,8 +179,11 @@ Run: `python -m trustfl.sim.run_local --config <cfg> --override k=v …`. Grids:
 IMDB: DistilBERT (frozen)+head, 30 rounds. **Attacks (10):** the standard families + ASB
 + CHAMP. **Defenses:** robust-aggregation baselines `fedavg/median/trimmed_mean/
 multi_krum/fltrust`, the representation-space baseline **RDA** (arXiv:2503.04473), and
-ECF variants `ecf_base` (clean+soft), `ecf_cand` (candidate+refresh+hard_gate), `ecf_zoned`
-(candidate+refresh+round_zoned), `ecf_bdoor` (backdoorability). Metrics in §1.
+ECF variants `ecf_base` (clean+soft, the ablative naive reference) and the **main ECF**
+`ecf_cand` = candidate+refresh + **`round_zoned`** (κ=2.5, κ_safe=1.0, the §4.3
+aggregation) — **the same mode on both modalities** (FashionMNIST and IMDB); plus
+`ecf_bdoor` (backdoorability, alt. signal). `hard_gate` is kept only as an ablation
+(§7, aggregation-mode axis). Metrics in §1.
 **Repeats:** every configuration is run over multiple seeds and reported as **mean ± std**
 — FashionMNIST main grid & ablations use 3 seeds `{0,1,2}`; IMDB (DistilBERT, costlier)
 uses 2 seeds `{0,1}` (`experiments/parse_meanstd.py` → `summary_meanstd.csv`).
@@ -211,7 +214,8 @@ uses 2 seeds `{0,1}` (`experiments/parse_meanstd.py` → `summary_meanstd.csv`).
 | Seed | 0 | 0 |
 
 **ECF candidate probe:** image NC `steps=150, lr=0.1, λ=0.01`; text HotFlip `iters=3`; **refresh
-`K=5`** rounds. (`ecf_base`/`ecf_cand`/`ecf_zoned` override only `mode` and `probe.strategy`.)
+`K=5`** rounds. (`ecf_base`/`ecf_cand` override only `mode` and `probe.strategy`; the
+reported ECF is `ecf_cand` with `mode=round_zoned` in both grids.)
 
 **6.2 Motivation experiment.** ASB vs. parameter-space signals — the §3 table; full
 grid in `experiments/fmnist_r500/summary.csv`.
@@ -225,8 +229,12 @@ grid in `experiments/fmnist_r500/summary.csv`.
 | RDA (arXiv:2503.04473) |  |  |  |  |
 | **ECF (ours)** | 0.02 | **0.03** | **1.00** | 0.878 |
 
-*(Blank RDA row and the `champ` attack are pending — added after the single-seed grid;
-their numbers arrive with the multi-seed mean±std grid now running.)*
+*(Interim numbers: this table is the single-seed `hard_gate` run (`fmnist_r500`). The
+reported ECF uses **`round_zoned`** (§4.3); the multi-seed `round_zoned` grid now running
+(`experiments/fmnist_grid/`) will replace these cells with **mean ± std** and fill the
+blank RDA row and `champ` attack. `round_zoned` generalizes `hard_gate` — same z>κ
+hard-reject at κ=2.5, plus a soft gray band — so the headline figures are expected to
+move only marginally.)*
 
 ECF attains the best-baseline robustness (BSR 0.02–0.03), the only AUROC = 1.00 on the
 adaptive attack (Multi-Krum collapses to 0.03), and clean accuracy on par with
