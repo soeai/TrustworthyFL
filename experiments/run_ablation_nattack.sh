@@ -27,7 +27,7 @@ for f in 8 12; do for atk in backdoor adaptive_ecf; do for d in multi_krum fltru
 done; done; done
 
 run_one() { # gpu attack defense f seed
-  local gpu=$1 atk=$2 d=$3 f=$4 seed=$5 log="$OUT/${atk}__${d}-f${f}__s${seed}.log"
+  local gpu=$1 atk=$2 d=$3 f=$4 seed=$5; local log="$OUT/${atk}__${d}-f${f}__s${seed}.log"
   grep -qE "round +$R " "$log" 2>/dev/null && { echo "[skip] $atk/$d/f$f/s$seed"|tee -a "$PROG"; return; }
   echo "[$(date +%H:%M:%S)] g$gpu START $atk/$d/f$f/s$seed"|tee -a "$PROG"
   # shellcheck disable=SC2046

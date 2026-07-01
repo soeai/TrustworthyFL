@@ -18,7 +18,7 @@ overrides_of() {
   esac
 }
 CELLS=(); for a in $ATTACKS; do for d in $DEFENSES; do for s in $SEEDS; do CELLS+=("$a|$d|$s"); done; done; done
-run_one() { local gpu=$1 atk=$2 def=$3 seed=$4 log="$OUT/fmnist/${atk}__${def}__s${seed}.log"
+run_one() { local gpu=$1 atk=$2 def=$3 seed=$4; local log="$OUT/fmnist/${atk}__${def}__s${seed}.log"
   grep -qE "round +$R " "$log" 2>/dev/null && { echo "[skip] $atk/$def/s$seed"|tee -a "$PROG"; return; }
   echo "[$(date +%H:%M:%S)] g$gpu START $atk/$def/s$seed"|tee -a "$PROG"
   CUDA_VISIBLE_DEVICES=$gpu python3 -u -m trustfl.sim.run_local --config "$CFG" \
