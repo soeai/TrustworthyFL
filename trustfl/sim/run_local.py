@@ -37,11 +37,11 @@ from ..metrics.detection import detection_auroc, tpr_at_fpr
 
 # data-space attacks (poison the training set before local training)
 DATA_ATTACKS = ("label_flip", "backdoor", "spurious_feature",
-                "constrained_backdoor", "adaptive_ecf")
+                "constrained_backdoor", "adaptive_ecf", "champ")
 # update-space attacks (overwrite/transform malicious deltas after training)
 UPDATE_ATTACKS = ("sign_flip", "gaussian", "lie", "min_max")
 # attacks that implant a trigger -> target backdoor (report backdoor success rate)
-BACKDOOR_ATTACKS = ("backdoor", "constrained_backdoor", "adaptive_ecf")
+BACKDOOR_ATTACKS = ("backdoor", "constrained_backdoor", "adaptive_ecf", "champ")
 
 
 def _loader(X, y, bs, shuffle=True):
@@ -123,6 +123,8 @@ def run(cfg: dict):
     print(f"device={dev} dataset={meta.name}({meta.source}) clients={cfg['num_clients']} "
           f"malicious={len(malicious)} defense={defense.name} attack={cfg['attack']}")
 
+    champ_hist = []   # CHAMP: history of backdoor incorporation (global BSR) for the alpha feedback
+
     for rnd in range(1, cfg["rounds"] + 1):
         # (A) re-recover the candidate probe from the live global every K rounds
         if probe_strategy == "candidate" and probe_refresh > 0 and rnd % probe_refresh == 1 and rnd > 1:
@@ -139,6 +141,16 @@ def run(cfg: dict):
             attacking = {int(c) for c in sel if c in malicious}
         else:
             attacking = {int(c) for c in sel if c in malicious and rng.random() < attack_prob}
+
+        # ---- CHAMP (Chameleon Poisoning) feedback coefficient (Eq. 9): alpha_t =
+        # 1 - mean(recent backdoor-incorporation v). v_t is proxied by the global model's
+        # backdoor success on the trigger set (black-box, directly observable). High
+        # incorporation -> low alpha (push poison); low incorporation -> high alpha
+        # (camouflage harder via proximity-to-global). No history yet -> full camouflage.
+        champ_k = int(cfg.get("champ_k", 3))
+        champ_alpha = 1.0
+        if champ_hist:
+            champ_alpha = max(0.0, min(1.0, 1.0 - sum(champ_hist[-champ_k:]) / len(champ_hist[-champ_k:])))
 
         # ---- benign training (and data-poisoning malicious) ----
         deltas, ids, is_mal, is_atk = [], [], [], []
@@ -174,10 +186,13 @@ def run(cfg: dict):
                     else:  # text
                         Xc, yc = poison_text_backdoor(Xc, yc, tgt, token_id=ttok, pos=tpos,
                                                       frac=0.5, seed=cfg["seed"] + cid)
+            _prox = (champ_alpha * cfg.get("champ_mu", 1.0)
+                     if (cfg["attack"] == "champ" and cid in attacking) else 0.0)
             new_p = local_train(m, _loader(Xc, yc, cfg["batch_size"]),
                                 epochs=cfg["local_epochs"], lr=cfg["lr"], device=dev,
                                 optimizer=cfg.get("optimizer", "sgd"),
-                                weight_decay=cfg.get("weight_decay", 0.0))
+                                weight_decay=cfg.get("weight_decay", 0.0),
+                                prox_mu=_prox, global_ref=(global_params if _prox > 0 else None))
             delta = [n - g for n, g in zip(new_p, global_params)]
             deltas.append(delta); ids.append(int(cid))
             is_mal.append(cid in malicious); is_atk.append(cid in attacking)
@@ -250,6 +265,8 @@ def run(cfg: dict):
         set_params(model, global_params)
         acc = evaluate(model, test_loader, device=dev)
         bsr = backdoor_success_rate(model, bd_loader, tgt, device=dev) if cfg["attack"] in BACKDOOR_ATTACKS else float("nan")
+        if cfg["attack"] == "champ" and bsr == bsr:   # feed global backdoor incorporation back to CHAMP
+            champ_hist.append(bsr)
         line = f"round {rnd:3d} | acc={acc:.4f} | bsr={bsr:.3f} | agg={dt:.2f}s"
         scores = defense.last_scores()
         if scores is not None:

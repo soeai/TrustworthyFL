@@ -10,18 +10,26 @@ from ..attribution.operators import get_params, set_params
 
 def local_train(model, loader, epochs: int = 1, lr: float = 0.01,
                 momentum: float = 0.9, device: str = "cpu",
-                optimizer: str = "sgd", weight_decay: float = 0.0) -> NDArrays:
+                optimizer: str = "sgd", weight_decay: float = 0.0,
+                prox_mu: float = 0.0, global_ref: NDArrays = None) -> NDArrays:
     model.to(device).train()
     params = [p for p in model.parameters() if p.requires_grad]  # skip frozen backbone
     if optimizer.lower() == "adamw":
         opt = torch.optim.AdamW(params, lr=lr, weight_decay=weight_decay)
     else:
         opt = torch.optim.SGD(params, lr=lr, momentum=momentum, weight_decay=weight_decay)
+    # optional proximity-to-global regularizer (FedProx-style) — used by CHAMP as the
+    # camouflage/conformity term that keeps the malicious update inside the benign cloud.
+    ref = None
+    if prox_mu > 0.0 and global_ref is not None:
+        ref = [torch.as_tensor(g, dtype=p.dtype, device=device) for g, p in zip(global_ref, params)]
     for _ in range(epochs):
         for xb, yb in loader:
             xb, yb = xb.to(device), yb.to(device)
             opt.zero_grad()
             loss = F.cross_entropy(model(xb), yb)
+            if ref is not None:
+                loss = loss + prox_mu * sum(((p - r) ** 2).sum() for p, r in zip(params, ref))
             loss.backward()
             opt.step()
     return get_params(model)
