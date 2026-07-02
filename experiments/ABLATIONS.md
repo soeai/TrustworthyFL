@@ -5,8 +5,8 @@ AUROC / clean accuracy. Default (reference) configuration:
 
 > FashionMNIST (real), `root_size=500`, 60 rounds, 20 clients, Dirichlet α=0.5, f=4
 > malicious; `defense=ecf`, `attribution=grad_x_input`, **norm_gate=off**, probe =
-> `candidate` (refresh K=5), aggregation **`round_zoned`** (the ECF\* default; κ=2.5,
-> κ_safe=1.0; `hard_gate` is the A4 ablation). Unless noted, ablations use attacks
+> `candidate` (refresh **K=3**), aggregation **`hard_gate`** (the ECF\* default; κ=2.5;
+> `round_zoned`/`soft`/`round_gate` are A4 ablations). Unless noted, ablations use attacks
 > `backdoor` and `adaptive_ecf`.
 
 Run the not-yet-covered axes with `experiments/run_ablations.sh` (2-GPU, resumable);
@@ -17,8 +17,8 @@ results land in `experiments/ablations/<axis>/<attack>__<value>.log` and
 |---|---|---|---|---|
 | A1 | **Attack** (build-up to ASB) | `backdoor` · `constrained_backdoor` (= constrain-and-scale, norm-bounded) · `adaptive_ecf` (+cosine = ASB) | which conformance defeats which signal; norm-bound alone keeps Krum strong, the cosine floor breaks it | `experiments/fmnist_r500/` |
 | A2 | **Probe strategy** | `clean` · `oracle` · **`candidate`(+refresh)** · `perturb` | does activating the probe restore the function-space signal; is knowledge-free recovery ≈ the oracle | `experiments/ablations/probe_strategy/` *(run)* |
-| A3 | **Candidate refresh** | `frozen` (recover once) · **`refresh` K=5** | does re-recovering the trigger from the live model prevent the mid-training detection decay | `experiments/ablations/candidate_refresh/` *(run)* |
-| A4 | **Aggregation mode** | `soft` · `hard_gate` · `round_gate` · **`round_zoned`** | reject vs dilute; uniform vs soft survivors; value of the gray zone. Dedicated 3-seed A/B **`round_zoned` vs `hard_gate`** (same probe/κ) decides the reported ECF\* | `experiments/ablations/mode/` *(round_zoned vs hard_gate, 3 seeds)*; soft=ecf_base in `experiments/fmnist_r500/`; round_gate in `experiments/intermittent/` |
+| A3 | **Candidate refresh** | `frozen` (recover once) · `K=5` · **`K=3`** | does re-recovery prevent mid-training decay. **Result:** K=5 collapses on 1/3 ASB seeds at round 60 (AUROC→0.05); **K=3** → AUROC 1.000±0.000, mean BSR 0.41→0.067 | `experiments/candidate_fix/` (K=3 fix); `experiments/ablations/candidate_refresh/` (frozen vs K=5) |
+| A4 | **Aggregation mode** | `soft` · **`hard_gate`** · `round_gate` · `round_zoned` | reject vs dilute; uniform vs soft survivors. **Result (3-seed A/B):** `hard_gate` beats `round_zoned` — mean ACC 0.856 vs 0.800; round_zoned's clean-round→uniform admits stealthy min_max (one seed diverges to ACC 0.10) → ECF\* = `hard_gate` | `experiments/ablations/mode/`; soft=ecf_base in `experiments/fmnist_r500/`; round_gate in `experiments/intermittent/` |
 | A5 | **Detection signal** | **`consistency`** · `backdoorability` | consensus explanation-divergence vs per-client min-mask recovery (≈17× cost) | `experiments/fmnist_r500/` (ecf_cand vs ecf_bdoor) |
 | A6 | **Root-set size** | `100` · **`500`** | reference quality; the method's gain is largest where the base detector is weakest (root=500) | `experiments/real_full/` (root=100) vs `experiments/fmnist_r500/` (root=500) |
 | A7 | **Attack temporality** | **continuous** · intermittent `attack_prob ∈ {0.2,0.5,1.0}` | does stateless per-round scoring reuse resting-attacker rounds; how does Krum degrade with attack frequency | `experiments/intermittent/` |

@@ -118,42 +118,45 @@ uses. *Theory:* a backdoor's corruption lives on the **trigger sub-manifold**; o
 inputs `div_i` is uninformative (and under non-IID even penalizes honest spread).
 *Construction* (`probe.strategy`): ECF\* uses **`candidate`** — reverse-engineer a
 trigger from the *live* global by Neural-Cleanse-lite
-`min_{m,p} CE(f_{θ^(r)}((1−m)⊙x+m⊙p),t)+λ‖m‖₁`, **refreshed every `K` rounds**
+`min_{m,p} CE(f_{θ^(r)}((1−m)⊙x+m⊙p),t)+λ‖m‖₁`, **refreshed every `K=3` rounds**
 (knowledge-free — the server assumes nothing about the attacker; frozen-from-init
-recovery decays). *Note, not used as the method:* `oracle` (the true trigger) is
+recovery decays). *K matters:* refresh `K=5` lets the recovered trigger go stale as the
+backdoor embeds late — on 1/3 ASB seeds detection collapsed at round 60 (AUROC→0.05);
+`K=3` restores AUROC = 1.000±0.000 across seeds (§7 A3, `experiments/candidate_fix/`). *Note, not used as the method:* `oracle` (the true trigger) is
 reported only as an unrealistic upper bound; `perturb` (generic) and `clean` are
 ablation baselines (§7).
 
-### 4.2 (ii) Detection must *act* — Bottleneck B → confidence-gated hard rejection
+### 4.2 (ii) Detection must *act* — Bottleneck B → confidence-gated hard rejection (`hard_gate`, **the ECF\* aggregator**)
 *Link:* a function-space *score* alone does not stop ASB if the aggregator still admits
 it. *Theory:* soft weighting `ReLU(1−div/τ)` never rejects → backdoor persists on a
 weight fraction, and the un-rejected leakage **embeds and erodes the detector**
-(feedback). *Construction:* robust z-score `z_i=0.6745(div_i−median)/MAD`
-(`0.6745=Φ⁻¹(0.75)`), hard-reject `z_i>κ`, capped at budget `f`.
+(feedback). *Construction — `hard_gate`:* robust z-score `z_i=0.6745(div_i−median)/MAD`
+(`0.6745=Φ⁻¹(0.75)`), **hard-reject `z_i>κ` (κ=2.5), capped at budget `f`**, sample-weight
+average the survivors. With `norm_gate` off (accuracy tax removed, [[norm-gate-is-the-accuracy-tax]])
+this already reaches Multi-Krum-level clean accuracy (§6.3), so `hard_gate` is the
+reported ECF\* aggregation.
 
-### 4.3 (iii) Mitigation must not tax honest clients — accuracy → zoned trust
-*Theory:* rejecting the `f` attackers is free; the residual cost is soft-penalizing
-honest non-IID heterogeneity. *Construction — `round_zoned` (main aggregation):*
-```
-clean round (no z>κ)             → uniform-average everyone
-else:  safe z≤κ_safe             → w=1 (uniform)
-       gray κ_safe<z≤κ           → w=ramp 1→0 (soft)
-       bad  z>κ (cap f)          → w=0 (hard reject)
-w ← w·n_i, normalize.
-```
-Generalizes the simpler rules (soft=all-gray; hard-reject+uniform=no-gray). Gray exists
-only with honest spread (MAD>0); a tight round degenerates to binary safe/bad.
+### 4.3 (iii) Zoned trust (`round_zoned`) — explored, **rejected**
+*Idea:* soften the reject into zones — clean round → uniform-all; safe `z≤κ_safe` → w=1;
+gray `κ_safe<z≤κ` → soft ramp; bad `z>κ` → reject — hoping the gray band recovers a little
+accuracy on honest non-IID spread. *Result (3-seed A/B, §7 A4, `experiments/ablations/mode/`):*
+it does **not** help and is **unsafe**: mean ACC 0.800 vs `hard_gate` 0.856, and its
+*clean-round→uniform* branch admits stealthy norm-matched attacks — on `min_max` one seed
+**diverges to ACC 0.10**. So ECF\* uses plain `hard_gate` (§4.2); `round_zoned` is kept
+only as the ablation that motivates rejecting it.
 
 ### 4.4 (iv) Scoring is per-round and stateless — temporal → resting attackers
 *Link:* ASB / any intermittent adversary (`attack_prob<1`) attacks only some rounds;
-on a resting round its update is honest. Re-scoring every round (no blacklist) lets the
-clean-round branch reuse that data, recovering ACC without weakening attacked rounds.
+on a resting round its update is honest. Re-scoring every round with no blacklist means a
+resting attacker's honest round scores as honest and is kept, recovering ACC without
+weakening the attacked rounds (main results use continuous attacks, `attack_prob=1.0`).
 
 ### 4.5 One line
-> **Activated-probe (candidate+refresh) explanation-divergence scoring → confidence-
-> zoned, stateless trust aggregation (`round_zoned`)**; for text the DistilBERT encoder
-> is frozen and only a head is federated. The aggregator operates directly on the raw
-> client updates (the z>κ reject gate handles large-norm attacks on its own).
+> **Activated-probe (candidate + refresh K=3) explanation-divergence scoring →
+> confidence-gated hard rejection, stateless (`hard_gate`, κ=2.5)**; for text the
+> DistilBERT encoder is frozen and only a head is federated. The aggregator operates
+> directly on the raw client updates (the z>κ reject gate handles large-norm attacks on
+> its own).
 
 ---
 
@@ -200,12 +203,14 @@ multi_krum/fltrust`, the representation-space baseline **RDA** (arXiv:2503.04473
 **Two named ECF configs (paper convention).**
 - **`ecf_base`** — clean probe + soft weighting (no activation, no gate): the *naive
   ablative reference*.
-- **ECF\*** — **`candidate` + `refresh` + `round_zoned`** (κ=2.5, κ_safe=1.0),
+- **ECF\*** — **`candidate` + `refresh` K=3 + `hard_gate`** (κ=2.5, no norm gate),
   **identical on both modalities** (FashionMNIST and IMDB): **the main method.
-  Unqualified "ECF" always means ECF\*.** (In the logs ECF\* is `ecf_cand`.)
+  Unqualified "ECF" always means ECF\*.** (In the logs ECF\* is `ecf_cand`.) The mode and
+  refresh were fixed empirically — `hard_gate` beats `round_zoned` (which diverges on
+  min_max) and K=3 beats K=5 (ASB stability) — see §7 A3/A4.
 
 Everything else is an *ablation of ECF\** along a single axis (§7): probe
-`oracle`/`perturb`/`clean`, mode `soft`/`hard_gate`/`round_gate`, score
+`oracle`/`perturb`/`clean`, mode `soft`/`round_gate`/`round_zoned`, refresh K, score
 `backdoorability`, root=100. `oracle` is only ever a *note* (unrealistic upper bound),
 never the method. Metrics in §1.
 **Repeats:** every configuration is run over multiple seeds and reported as **mean ± std**
@@ -231,15 +236,18 @@ uses 2 seeds `{0,1}` (`experiments/parse_meanstd.py` → `summary_meanstd.csv`).
 | Attribution | grad×input | grad×input |
 | ECF `tau` | 0.5 | 0.5 |
 | ECF `consensus` | geometric median | geometric median |
-| ECF **`kappa` (κ, hard/zoned reject gate)** | 2.5 | 2.5 |
-| ECF **`kappa_safe` (κ_safe, round_zoned safe-zone edge)** | 1.0 | 1.0 |
+| ECF **`mode`** | **`hard_gate`** | **`hard_gate`** |
+| ECF **`kappa` (κ, hard-reject gate)** | 2.5 | 2.5 |
+| ECF **candidate `refresh` K** | **3** | **3** |
 | Target label | 0 | 1 (positive) |
 | Trigger | 3×3 bright pixel patch (bottom-right) | token id 2 at position 0 |
-| Seed | 0 | 0 |
+| Seed(s) | {0,1,2} | {0,1} |
 
-**ECF candidate probe:** image NC `steps=150, lr=0.1, λ=0.01`; text HotFlip `iters=3`; **refresh
-`K=5`** rounds. (`ecf_base`/`ecf_cand` override only `mode` and `probe.strategy`; the
-reported ECF is `ecf_cand` with `mode=round_zoned` in both grids.)
+(`kappa_safe` = 1.0 applies only to the `round_zoned` ablation, §7 A4.)
+
+**ECF candidate probe:** image NC `steps=120, lr=0.1, λ=0.01`; text HotFlip `iters=3`; **refresh
+`K=3`** rounds. (`ecf_base`/`ecf_cand` override only `mode` and `probe.strategy`; the
+reported ECF\* is `ecf_cand` = `candidate` + `hard_gate` in both grids.)
 
 **6.2 Motivation experiment.** ASB vs. parameter-space signals — the §3 table; full
 grid in `experiments/fmnist_r500/summary.csv`.
@@ -253,12 +261,12 @@ grid in `experiments/fmnist_r500/summary.csv`.
 | RDA (arXiv:2503.04473) |  |  |  |  |
 | **ECF\* (ours)** | 0.02 | **0.03** | **1.00** | 0.878 |
 
-*(Interim numbers: this table is the single-seed `hard_gate` run (`fmnist_r500`). The
-reported ECF uses **`round_zoned`** (§4.3); the multi-seed `round_zoned` grid now running
-(`experiments/fmnist_grid/`) will replace these cells with **mean ± std** and fill the
-blank RDA row and `champ` attack. `round_zoned` generalizes `hard_gate` — same z>κ
-hard-reject at κ=2.5, plus a soft gray band — so the headline figures are expected to
-move only marginally.)*
+*(Interim numbers: single-seed `hard_gate`+K=5 run (`fmnist_r500`). ECF\* is now
+`hard_gate`+K=3 (§4.2, §7 A3/A4); the multi-seed grid running in
+`experiments/fmnist_grid/` will replace these with **mean ± std** and fill the blank RDA
+row and `champ` attack. The seed-0 adaptive figures here (BSR 0.03 / AUROC 1.00) were
+seed-dependent under K=5; K=3 restores AUROC = 1.000±0.000 across 3 seeds, mean BSR 0.067
+— `experiments/candidate_fix/`.)*
 
 ECF\* attains the best-baseline robustness (BSR 0.02–0.03), the only AUROC = 1.00 on the
 adaptive attack (Multi-Krum collapses to 0.03), and clean accuracy on par with
@@ -300,13 +308,13 @@ adaptive attack it reaches only 0.30; text stays the weak modality (cf. §8).
 |---|---|---|
 | Attack build-up | backdoor · norm-bounded (`constrained_backdoor`, = constrain-and-scale, Bagdasaryan 2020) · +cosine (ASB) | which conformance evades which signal (norm alone is insufficient) |
 | Probe strategy | clean · oracle · **candidate(+refresh)** · perturb | does activation restore the signal; is knowledge-free recovery ≈ oracle |
-| Candidate refresh | once-frozen · **K=5** | does re-recovery prevent detection decay |
-| Aggregation mode | soft · hard_gate · round_gate · **round_zoned** | reject vs dilute; uniform vs soft survivors; gray band value. A dedicated 3-seed A/B **`round_zoned` vs `hard_gate`** (`experiments/ablations/mode/`, same probe/κ) fixes which is the reported ECF\* — expected tie on BSR/AUROC (same z>κ reject), round_zoned favoured on ACC (safe-zone uniform vs soft-survivors). |
+| Candidate refresh (A3) | once-frozen · K=5 · **K=3** | does re-recovery prevent detection decay. **Result:** K=5 collapses on 1/3 ASB seeds at round 60 (AUROC→0.05); **K=3** restores AUROC=1.000±0.000, mean BSR 0.41→0.067 (`experiments/candidate_fix/`) → ECF\* uses K=3 |
+| Aggregation mode (A4) | soft · **`hard_gate`** · round_gate · round_zoned | reject vs dilute; uniform vs soft survivors. **Result (3-seed A/B, `experiments/ablations/mode/`):** `hard_gate` beats `round_zoned` — mean ACC 0.856 vs 0.800, and round_zoned's clean-round→uniform branch admits stealthy `min_max` (one seed diverges to ACC 0.10). → ECF\* = `hard_gate`; round_zoned rejected |
 | Score signal | **consistency** · backdoorability | consensus divergence vs per-client recovery (≈17× cost) |
 | Root size | 100 · **500** | reference quality; gain largest where base detector is weakest |
-| Attack temporality | **continuous** · intermittent | does stateless `round_zoned` reuse resting rounds for ACC |
+| Attack temporality | **continuous** · intermittent | does stateless per-round scoring reuse resting-attacker rounds for ACC |
 | **Number of attackers `f`** | **4** (=20%, default from the main grid) · **8** (40%) · **12** (60%, >50%) | how each defense degrades as the malicious fraction grows, and the >50% breakdown |
-| Gate thresholds | κ, κ_safe | zone-boundary sensitivity |
+| Gate threshold | κ (=2.5) · κ_safe (round_zoned only) | hard-reject boundary sensitivity |
 | Modality / encoder | image · text (**DistilBERT** vs TextEmbedMLP) | transfer; pretrained encoder removes underfit |
 
 ---
