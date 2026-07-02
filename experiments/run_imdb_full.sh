@@ -3,7 +3,7 @@
 # lacked: attack CHAMP (arXiv 2509.08746) and defense RDA (arXiv 2503.04473), for
 # consistency with the fmnist grid. 10 attacks x 8 defenses x 2 seeds. Resumable, 2-GPU:
 # cells already completed by run_imdb_grid.sh (9x7) are skipped; only the new champ/rda
-# combinations (both seeds) actually run.
+# combinations (both seeds) actually run. ECF* = candidate + refresh K=3 + hard_gate.
 #   setsid nohup bash experiments/run_imdb_full.sh > experiments/imdb_distilbert/nohup_full.out 2>&1 &
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; cd "$ROOT"
@@ -16,7 +16,7 @@ overrides_of() {
   case $1 in
     fedavg|median|trimmed_mean|multi_krum|fltrust|rda) echo "defense=$1";;
     ecf_base)  echo 'defense=ecf attribution=grad_x_input defense_kw={"tau":0.5,"mode":"soft","consensus":"geomedian","norm_gate":false} probe={"strategy":"clean"}';;
-    ecf_cand)  echo 'defense=ecf attribution=grad_x_input defense_kw={"tau":0.5,"mode":"round_zoned","consensus":"geomedian","norm_gate":false,"kappa":2.5,"kappa_safe":1.0} probe={"strategy":"candidate","mode":"triggered","candidate":{"steps":120,"refresh":5}}';;
+    ecf_cand)  echo 'defense=ecf attribution=grad_x_input defense_kw={"tau":0.5,"mode":"hard_gate","consensus":"geomedian","norm_gate":false,"kappa":2.5} probe={"strategy":"candidate","mode":"triggered","candidate":{"steps":120,"refresh":3}}';;
   esac
 }
 CELLS=(); for a in $ATTACKS; do for d in $DEFENSES; do for s in $SEEDS; do CELLS+=("$a|$d|$s"); done; done; done

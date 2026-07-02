@@ -10,7 +10,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"; cd "$ROOT"
 CFG=trustfl/configs/fmnist_ecf.yaml; OUT=experiments/ablations/n_attackers; PROG=$OUT/progress.log; R=60
 SEEDS="0 1 2"    # 3 seeds/cell -> mean +/- std
 BASE="data_mode=real root_size=500 rounds=$R"
-CAND='probe={"strategy":"candidate","mode":"triggered","candidate":{"steps":120,"refresh":5}}'
+CAND='probe={"strategy":"candidate","mode":"triggered","candidate":{"steps":120,"refresh":3}}'
 ECFKW='defense_kw={"tau":0.5,"mode":"hard_gate","consensus":"geomedian","norm_gate":false,"kappa":2.5}'
 mkdir -p "$OUT"
 
